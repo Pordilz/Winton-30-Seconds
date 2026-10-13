@@ -1,0 +1,5 @@
+# Build output and local Supabase settings (written by build.js)
+dist/
+config.js
+.vercel
+.env*

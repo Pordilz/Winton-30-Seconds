@@ -33,7 +33,10 @@
 
       <div class="deck-line">
         <span id="deck-info" class="mini"></span>
-        <button id="open-deck" class="pill" type="button">Feed the deck</button>
+        <div class="deck-pills">
+          <button id="open-lore" class="pill" type="button" hidden>The lore</button>
+          <button id="open-deck" class="pill" type="button">Feed the deck</button>
+        </div>
       </div>
 
       <button id="resume" class="btn btn-outline" type="button" hidden>Resume last game</button>
@@ -82,6 +85,11 @@
         </button>
       </div>
 
+      <button id="open-quiz" class="btn btn-outline quiz-entry" type="button">
+        <span>Play the quiz</span>
+        <span class="quiz-entry-note">Who said it? What were they on about?</span>
+      </button>
+
       <details class="how">
         <summary>How to play</summary>
         <ol>
@@ -105,6 +113,7 @@
 
       <h1 class="plates headline" data-text="Feed the deck">Feed the deck</h1>
       <p class="small">A name, a place, a saying, a night nobody will let go of. If most of the group would get it, it goes in.</p>
+      <p id="deck-mode" class="mode-note"></p>
 
       <form id="add-form" class="add-form" autocomplete="off">
         <label class="field">
@@ -113,14 +122,20 @@
         </label>
         <div id="cat-chips" class="chips" role="group" aria-label="Category"></div>
         <div class="cta cta-sm">
-          <button class="btn btn-primary btn-sm" type="submit">Add to the deck</button>
+          <button id="add-btn" class="btn btn-primary btn-sm" type="submit">Add to the deck</button>
         </div>
       </form>
 
       <section class="mine" aria-labelledby="mine-h">
-        <h2 id="mine-h" class="label-row"><span>Added on this phone</span><span id="mine-count">0</span></h2>
+        <h2 id="mine-h" class="label-row"><span>Only on this phone</span><span id="mine-count">0</span></h2>
         <ul id="mine-list" class="mine-list"></ul>
-        <p id="mine-empty" class="small">Nothing yet. Terms you add here stay on this phone until you share them.</p>
+        <p id="mine-empty" class="small"></p>
+        <button id="push-local" class="btn btn-outline btn-sm" type="button" hidden>Send these to the group deck</button>
+      </section>
+
+      <section id="recent" class="mine" aria-labelledby="recent-h" hidden>
+        <h2 id="recent-h" class="label-row"><span>Just added by the group</span></h2>
+        <ul id="recent-list" class="mine-list"></ul>
       </section>
 
       <div class="share-row">
@@ -140,15 +155,27 @@
         </label>
         <button id="paste-add" class="btn btn-outline btn-sm" type="button">Add them all</button>
       </div>
-      <p class="small center">Whoever opens your link gets your terms added to their deck. No accounts.</p>
+      <p id="share-note" class="small center">Whoever opens your link gets your terms added to their deck. No accounts.</p>
       <button id="copy-words" class="link-btn center" type="button">Copy as lines for words.js</button>
+    </section>
+
+    <!-- ============================================================ the lore -->
+    <section id="lore" class="screen" hidden>
+      <header class="strip">
+        <button id="lore-back" class="strip-btn" type="button">← Back</button>
+        <span id="lore-source"></span>
+      </header>
+      <h1 class="plates headline" data-text="The lore">The lore</h1>
+      <p id="lore-sub" class="small"></p>
+      <div id="lore-tabs" class="chips" role="group" aria-label="Lore sections"></div>
+      <div id="lore-body" class="lore-body"></div>
     </section>
 
     <!-- ============================================================ incoming terms -->
     <section id="import" class="screen" hidden>
       <header class="strip"><span>Incoming</span><span>From a friend</span></header>
       <h1 class="plates headline" id="import-title" data-text=""></h1>
-      <p class="small">Someone sent you terms for the deck. They'll be saved on this phone.</p>
+      <p id="import-note" class="small">Someone sent you terms for the deck. They'll be saved on this phone.</p>
       <ul id="import-list" class="mine-list"></ul>
       <p id="import-more" class="small"></p>
       <div class="cta">
@@ -215,7 +242,7 @@
     <section id="review" class="screen" hidden>
       <header class="strip"><span id="review-team"></span><span id="review-turn"></span></header>
       <div class="stamp-wrap"><h1 id="review-title" class="big-stamp">Time's up</h1></div>
-      <p class="small center">Both teams check the card. Tap a term to fix it.</p>
+      <p class="small center">Both teams check the card. Tap a term to fix it. The small print is why it's in the deck.</p>
       <ul id="review-terms" class="check-list"></ul>
 
       <div class="receipt-wrap">
@@ -261,10 +288,148 @@
       <button id="new-game" class="link-btn center" type="button">Change teams</button>
     </section>
 
+    <!-- ============================================================ quiz: setup -->
+    <section id="quiz-setup" class="screen" hidden>
+      <header class="strip">
+        <button id="quiz-back" class="strip-btn" type="button">← Back</button>
+        <span id="quiz-info"></span>
+      </header>
+      <h1 class="plates headline" data-text="The quiz">The quiz</h1>
+      <p class="small">Who said what, what they were on about, and how the polls went. Pass the phone: each team answers its own question, against the clock.</p>
+
+      <button id="quiz-resume" class="btn btn-outline" type="button" hidden>Resume last quiz</button>
+
+      <section class="block" aria-labelledby="qteams-h">
+        <h2 id="qteams-h" class="label"><span class="num">01</span> Who's playing</h2>
+        <ol id="quiz-team-list" class="team-list"></ol>
+        <button id="quiz-add-team" class="link-btn" type="button">+ Add a team or player</button>
+      </section>
+
+      <section class="block" aria-labelledby="qrules-h">
+        <h2 id="qrules-h" class="label"><span class="num">02</span> House rules</h2>
+        <div class="rules-grid">
+          <div class="stepper">
+            <span class="mini" id="rounds-label">Rounds</span>
+            <div class="stepper-row">
+              <button class="round" type="button" data-qsetting="rounds" data-step="-1" aria-label="Fewer rounds">−</button>
+              <output id="rounds" class="stepper-value" aria-labelledby="rounds-label">5</output>
+              <button class="round" type="button" data-qsetting="rounds" data-step="1" aria-label="More rounds">+</button>
+            </div>
+          </div>
+          <div class="stepper">
+            <span class="mini" id="qseconds-label">Seconds to answer</span>
+            <div class="stepper-row">
+              <button class="round" type="button" data-qsetting="seconds" data-step="-5" aria-label="Fewer seconds to answer">−</button>
+              <output id="qseconds" class="stepper-value" aria-labelledby="qseconds-label">20</output>
+              <button class="round" type="button" data-qsetting="seconds" data-step="5" aria-label="More seconds to answer">+</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <p id="quiz-error" class="error" role="alert" hidden></p>
+
+      <div class="cta">
+        <button id="quiz-start" class="btn btn-primary" type="button">
+          <span>Start the quiz</span>
+          <svg aria-hidden="true" width="30" height="20" viewBox="0 0 30 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M2 10h24M18 2l8 8-8 8"/></svg>
+        </button>
+      </div>
+
+      <details class="how">
+        <summary>How the quiz works</summary>
+        <ol>
+          <li>Each turn, spin for a category, then the team on the phone gets one question with four answers.</li>
+          <li>A right answer is worth 500, plus up to 500 more the faster you lock it in.</li>
+          <li>Answer streaks pay: +100 for each right answer in a row after the first, up to +500.</li>
+          <li>Each team has one 50:50. It knocks out two wrong answers.</li>
+          <li>The last round is worth double. Most points at the end wins.</li>
+        </ol>
+      </details>
+    </section>
+
+    <!-- ============================================================ quiz: spin -->
+    <section id="quiz-turn" class="screen" hidden>
+      <header class="strip"><span id="qt-round"></span><span id="qt-left"></span></header>
+      <div id="quiz-standings" class="standings" aria-label="Scoreboard"></div>
+      <div class="up-next">
+        <span class="tag">Up next</span>
+        <h1 class="plates headline" id="qt-team" data-text=""></h1>
+        <p id="qt-double" class="twist" hidden>Final round · double points</p>
+        <p class="small">Everyone on the team can confer. Spin for your category.</p>
+      </div>
+      <ul id="wheel" class="wheel" aria-live="polite"></ul>
+      <button id="spin" class="btn btn-outline" type="button">Spin</button>
+      <div id="ask-wrap" class="cta" hidden>
+        <button id="ask" class="btn btn-primary" type="button">
+          <span>Show the question</span>
+          <svg aria-hidden="true" width="30" height="20" viewBox="0 0 30 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M2 10h24M18 2l8 8-8 8"/></svg>
+        </button>
+      </div>
+      <button id="quiz-quit" class="link-btn center" type="button">End quiz</button>
+    </section>
+
+    <!-- ============================================================ quiz: question -->
+    <section id="quiz-q" class="screen" hidden>
+      <header class="strip"><span id="qq-team"></span><span id="qq-kind"></span></header>
+      <div class="q-clock-row">
+        <span id="q-clock" class="plates q-clock" data-text="20" aria-hidden="true">20</span>
+        <span id="q-clock-sr" class="sr-only" role="timer"></span>
+        <span id="qq-worth" class="mini"></span>
+      </div>
+      <div class="fuse" aria-hidden="true"><div id="q-fuse" class="fuse-fill"></div></div>
+      <h1 id="qq-prompt" class="q-prompt"></h1>
+      <blockquote id="qq-quote" class="q-quote" hidden></blockquote>
+      <ul id="tiles" class="tiles"></ul>
+      <div class="play-foot">
+        <button id="fifty" class="pill fifty" type="button">50:50</button>
+        <span id="qq-streak" class="mini"></span>
+      </div>
+    </section>
+
+    <!-- ============================================================ quiz: reveal -->
+    <section id="quiz-reveal" class="screen" hidden>
+      <header class="strip"><span id="qr-team"></span><span id="qr-round"></span></header>
+      <div class="stamp-wrap"><h1 id="qr-title" class="big-stamp">Correct</h1></div>
+      <p id="qr-prompt" class="small center"></p>
+      <ul id="qr-tiles" class="tiles reveal"></ul>
+      <div class="receipt-wrap">
+        <div class="receipt" id="q-receipt" aria-live="polite"></div>
+      </div>
+      <div id="qr-standings" class="standings" aria-label="Scoreboard"></div>
+      <div class="cta">
+        <button id="q-next" class="btn btn-primary" type="button">
+          <span id="q-next-label">Next team</span>
+          <svg aria-hidden="true" width="30" height="20" viewBox="0 0 30 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M2 10h24M18 2l8 8-8 8"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================================ quiz: podium -->
+    <section id="quiz-end" class="screen" hidden>
+      <header class="strip"><span>Final</span><span id="qe-meta"></span></header>
+      <h1 class="plates headline winner-name" id="qe-winner" data-text=""></h1>
+      <div class="win-word" aria-hidden="true"><span class="hl"></span><span>Know it all.</span></div>
+      <ol id="podium" class="podium" aria-label="Podium"></ol>
+      <section class="awards" aria-labelledby="qawards-h">
+        <h2 id="qawards-h" class="label"><span class="num">★</span> The awards</h2>
+        <ul id="q-awards" class="award-list"></ul>
+      </section>
+      <ol id="q-final" class="final-list"></ol>
+      <div class="cta">
+        <button id="q-rematch" class="btn btn-primary" type="button">
+          <span>Again</span>
+          <svg aria-hidden="true" width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 9a9 9 0 1 0 1 7"/><path d="M22 3v6h-6"/></svg>
+        </button>
+      </div>
+      <button id="q-home" class="link-btn center" type="button">Back to the cover</button>
+    </section>
+
   </main>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
+  <script src="config.js"></script>
   <script src="words.js"></script>
   <script src="game.js"></script>
 </body>

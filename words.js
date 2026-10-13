@@ -1,20 +1,24 @@
 // =====================================================================
-//  YOUR GROUP'S WORDS
+//  STARTER DECK
 // =====================================================================
 //
-//  This is the only file you need to edit to make the game yours.
+//  The real group deck lives in the Supabase database (the winton_terms
+//  table) and loads when the game is deployed with its Supabase settings.
+//  See "The group deck" in README.md.
+//
+//  This file is the fallback: the deck a phone uses before it has ever
+//  connected, or a copy of the game with no database at all. The terms
+//  below are made-up EXAMPLES so the game works out of the box. Keep
+//  your group's real terms in the database, not here: this repo is
+//  public.
 //
 //  - Each line in "quotes" is one term the describer has to get their
 //    team to guess.
 //  - Keep the comma at the end of each line.
-//  - Rename, add or delete categories freely. They only show up as a
-//    small hint under each term.
 //  - Duplicate terms are ignored, so don't worry about repeats.
 //
-//  The terms below are made-up EXAMPLES so you can try the game out.
-//  Delete them and replace them with your group's own people, places,
-//  sayings and in-jokes. Aim for at least 200 terms so a whole evening
-//  goes by without repeats (every turn uses 5).
+//  QUIZ (at the bottom) is the same idea for the quiz: made-up sample
+//  questions that play until the phone has loaded the group's quiz.
 // =====================================================================
 
 const WORDS = {
@@ -84,3 +88,17 @@ const WORDS = {
     "The mystery punch",
   ],
 };
+
+// Sample quiz questions. Each has a kind (who_said, reference, poll,
+// numbers, nickname, when, meta), a prompt, an optional quote, four
+// options, the answer (one of the options), and a receipt explaining it.
+const QUIZ = [
+  { kind: "who_said", prompt: "Who said it?", quote: "I'm five minutes away", options: ["Uncle Steve", "Gran", "Coach", "The barber"], answer: "Uncle Steve", receipt: "He was not five minutes away.", difficulty: 1 },
+  { kind: "reference", prompt: "\"The flat tyre\" was on which trip?", options: ["The 2019 road trip", "The karaoke night", "New Year's on the roof", "The quiz night"], answer: "The 2019 road trip", receipt: "In the rain, with no jack.", difficulty: 1 },
+  { kind: "poll", prompt: "The group voted on the best Sunday food. What won?", options: ["Sunday roast", "Mom's lasagne", "Midnight toasties", "Burnt sausages"], answer: "Sunday roast", receipt: "It wasn't close.", difficulty: 2 },
+  { kind: "numbers", prompt: "How many people turned up to the karaoke night?", options: ["4", "7", "11", "15"], answer: "7", receipt: "Seven, and one microphone.", difficulty: 2 },
+  { kind: "nickname", prompt: "Who goes by \"Coach\"?", options: ["The PE teacher", "Uncle Steve", "The barber", "Gran"], answer: "The PE teacher", receipt: "Still blows the whistle at braais.", difficulty: 1 },
+  { kind: "when", prompt: "When was the burnt Christmas dinner?", options: ["2018", "2020", "2021", "2023"], answer: "2021", receipt: "The smoke alarm was the guest of honour.", difficulty: 3 },
+  { kind: "meta", prompt: "What did the group chat bot get asked first?", options: ["To settle an argument", "For a recipe", "To write a poem", "The weather"], answer: "To settle an argument", receipt: "It refused to pick a side.", difficulty: 2 },
+  { kind: "who_said", prompt: "Who said it?", quote: "Trust me, I know a shortcut", options: ["Gran", "Coach", "Uncle Steve", "The cousin from overseas"], answer: "The cousin from overseas", receipt: "We did not get there faster.", difficulty: 2 },
+];
