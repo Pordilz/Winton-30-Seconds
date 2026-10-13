@@ -43,7 +43,7 @@
 
   let setup = null;  // { names, target, seconds, chaos }
   let game = null;   // { teams, target, seconds, chaos, current, deck, history }
-  let turn = null;   // { die, card: [{ term, category, got }] }
+  let turn = null;   // { die, card: [{ term, category, got }], from } (card holds every term dealt this turn; from is where the card on screen starts)
   let timerId = null;
   let wakeLock = null;
   let pendingImport = [];
@@ -1120,11 +1120,11 @@
       if (item.got === value) return;
       item.got = value;
       btn.setAttribute("aria-pressed", String(value));
-      $("#got-count").textContent = gotCount();
       if (value) {
         beep(660, 0.08, 0.12);
         haptic(15);
       }
+      updatePlayCount(value);
     };
     attachSwipe(btn, () => set(true), () => set(!item.got));
     return el("li", {}, btn);
@@ -1133,6 +1133,7 @@
   $("#go").addEventListener("click", () => {
     unlockAudio();
     turn.card = drawCard();
+    turn.from = 0;
     saveGame(); // remember which terms were used, even if the page reloads mid-turn
 
     $("#play-team").textContent = currentTeam().name;
@@ -1140,13 +1141,41 @@
     const twist = TWISTS[turn.die];
     $("#twist").hidden = !twist;
     $("#twist").textContent = twist ? twist.banner : "";
-    $("#terms").replaceChildren(...turn.card.map(termRow));
-    $("#got-count").textContent = "0";
-    $("#deck-left").textContent = `${game.deck.length} left in the deck`;
+    renderCard();
 
     show("play");
     keepScreenOn(true);
     startTimer();
+  });
+
+  function renderCard() {
+    $("#terms").replaceChildren(...turn.card.slice(turn.from).map(termRow));
+    $("#deck-left").textContent = `${game.deck.length} left in the deck`;
+    updatePlayCount(false);
+  }
+
+  // Once every term on the card is got, the describer can deal another card
+  // and keep going on the same clock.
+  function updatePlayCount(justGot) {
+    const cardNo = turn.from / CARD_SIZE + 1;
+    $("#got-count").textContent = gotCount();
+    $("#got-of").textContent = turn.card.length;
+    $("#card-no").textContent = cardNo > 1 ? `Card ${cardNo} · ` : "";
+    const cleared = turn.card.slice(turn.from).every((t) => t.got);
+    const wrap = $("#next-card-wrap");
+    if (cleared && wrap.hidden && justGot) {
+      beep(990, 0.12, 0.15);
+      haptic([30, 40, 30]);
+    }
+    wrap.hidden = !cleared;
+  }
+
+  $("#next-card").addEventListener("click", () => {
+    if (!timerId) return;
+    turn.from = turn.card.length;
+    turn.card.push(...drawCard());
+    saveGame();
+    renderCard();
   });
 
   function startTimer() {
@@ -1248,6 +1277,7 @@
       die: turn.die,
       points,
       missed: turn.card.filter((t) => !t.got).map((t) => t.term),
+      seen: turn.card.length,
     });
 
     if (team.score >= game.target) return showWinner(team);
@@ -1309,7 +1339,7 @@
     const mimes = h.filter((t) => t.die === "mime");
     if (mimes.length) {
       const m = mimes.reduce((a, b) => (b.got > a.got ? b : a));
-      awards.push({ label: "Best mime", value: `${name(m.team)} (${m.got} of 5 in silence)`, badge: String(m.got) });
+      awards.push({ label: "Best mime", value: `${name(m.team)} (${m.got} in silence)`, badge: String(m.got) });
     }
     return awards;
   }
@@ -1317,7 +1347,7 @@
   function showWinner(team) {
     store.remove(KEYS.game);
     const h = game.history;
-    $("#final-meta").textContent = `${h.length} turns · ${h.length * CARD_SIZE} terms`;
+    $("#final-meta").textContent = `${h.length} turns · ${h.reduce((n, t) => n + (t.seen || CARD_SIZE), 0)} terms`;
     setPlates($("#winner-name"), team.name);
 
     $("#awards").replaceChildren(...computeAwards().map((a, i) =>

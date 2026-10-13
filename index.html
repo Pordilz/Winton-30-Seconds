@@ -97,7 +97,7 @@
           <li>Roll the die. Whatever it lands on (0, 1 or 2) comes off your score for that turn.</li>
           <li>Start the clock. The describer gets five terms and has 30 seconds to get the team to say them, in any order.</li>
           <li>No saying the term or any part of it, no "sounds like" or "rhymes with", no spelling it out.</li>
-          <li>Tap a term, or swipe it right, the moment your team gets it.</li>
+          <li>Tap a term, or swipe it right, the moment your team gets it. Cleared all five with time left? Deal the next card and keep going.</li>
           <li>When time's up, both teams check the card. Points are the terms guessed minus the die.</li>
           <li>First team to the target wins. With the Chaos die on, some rolls change the rules for that turn instead.</li>
         </ol>
@@ -229,8 +229,14 @@
       </div>
       <div class="fuse" aria-hidden="true"><div id="fuse" class="fuse-fill"></div></div>
 
-      <p class="label-row"><span>Tap or swipe → when they get it</span><span><span id="got-count">0</span>/5</span></p>
+      <p class="label-row"><span>Tap or swipe → when they get it</span><span><span id="card-no"></span><span id="got-count">0</span>/<span id="got-of">5</span></span></p>
       <ul id="terms" class="terms"></ul>
+      <div id="next-card-wrap" class="cta cta-sm" hidden>
+        <button id="next-card" class="btn btn-primary btn-sm" type="button">
+          <span>Card cleared · next card</span>
+          <svg aria-hidden="true" width="30" height="20" viewBox="0 0 30 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M2 10h24M18 2l8 8-8 8"/></svg>
+        </button>
+      </div>
 
       <div class="play-foot">
         <button id="end-early" class="link-btn" type="button">End turn early</button>

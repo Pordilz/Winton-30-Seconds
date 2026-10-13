@@ -15,6 +15,7 @@ The Winton deck (642 terms pulled from the group chat: names, places, slang, roa
    Related terms never share a card, so one clue can't give away two answers. Each card also tries to cover five different categories.
 4. The describer can't say the term or any part of it, can't use "sounds like" or "rhymes with" clues, and can't spell it out.
 5. **Tap a term, or swipe it right,** the moment your team gets it. Tapping again un-marks it.
+   Got all five with time still on the clock? Tap **Card cleared · next card** to deal five more and keep scoring on the same clock.
 6. When time's up, both teams check the card and fix any mistakes before the points go in. The small print under each term is why it's in the deck, for settling "that's not even a thing" arguments.
 7. **Points = terms guessed − the die.** The first team to reach the target wins.
 
