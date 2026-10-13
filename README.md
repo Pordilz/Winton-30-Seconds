@@ -95,7 +95,7 @@ The layout widens on a PC, and the big screen fills a full-screen browser window
 
 - Refreshing the page puts you straight back in the room.
 - If the host drops out, the device that's been in the room longest takes over and the game carries on from where it was.
-- If the describer drops out before their turn starts, the host can skip to the next person on that team. Mid-turn, the host can end the turn for them.
+- Before a turn starts, the host can skip the describer and hand the turn to the next person on that team. A one-person team's turn passes to the next team instead. If the describer drops out mid-turn, the host can end the turn for them.
 
 Rooms run over Supabase Realtime in the same project as the deck. Nothing about a room is saved in the database; it only exists while people are in it.
 

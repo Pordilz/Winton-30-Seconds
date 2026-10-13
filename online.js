@@ -503,12 +503,19 @@
     bump();
   }
 
+  // Skips whoever's up to describe. A one-person team has nobody else, so
+  // the turn passes to the next team instead.
   function skipDescriber() {
     if (!amHost || S.phase !== "handoff") return;
-    S.rot[S.turn.team]++;
-    const team = teamMembers(S.turn.team);
-    const next = team[S.rot[S.turn.team] % team.length];
-    S.turn.describer = next.id;
+    const t = S.turn.team;
+    const team = teamMembers(t);
+    if (team.length < 2) {
+      S.current = (t + 1) % S.teams.length;
+      newTurn();
+      return;
+    }
+    S.rot[t]++;
+    S.turn.describer = team[S.rot[t] % team.length].id;
     S.turn.die = null;
     bump();
   }
@@ -777,7 +784,8 @@
     if (S.game === "30s") {
       const t = S.turn || {};
       const mine = t.describer === me.id;
-      if (S.phase === "handoff") return [k(t.n, t.die, mine, JSON.stringify(S.teams.map((x) => x.score))), () => handoffView(big, mine)];
+      // Redraw when the describer changes (a skip), drops in or out, or the teams change.
+      if (S.phase === "handoff") return [k(t.n, t.team, t.describer, isOnline(t.describer), t.die, mine, JSON.stringify(S.teams.map((x) => x.score)), S.players.map((p) => `${p.id}:${p.team}`).join()), () => handoffView(big, mine)];
       if (S.phase === "play") return [k(t.n, t.from, t.card.length, mine), () => playView(big, mine)];
       if (S.phase === "review") return [k(t.n, mine, JSON.stringify(t.card.map((c) => c.got))), () => reviewView(big, mine)];
       if (S.phase === "winner") return [k(S.winner), () => winnerView(big)];
@@ -1042,7 +1050,11 @@
       foot.push(el("p", { class: "mode-note", text: t.die === null ? `Waiting for ${dname} to roll…` : `Waiting for ${dname} to start the clock…` }));
     }
     if (amHost && !mine) {
-      const skip = el("button", { type: "button", class: "link-btn center", text: isOnline(t.describer) ? `Skip ${dname}` : `${dname} isn't connected · skip to the next describer` });
+      const solo = teamMembers(t.team).length < 2;
+      const label = isOnline(t.describer)
+        ? (solo ? `Skip ${team.name}'s turn` : `Skip ${dname}`)
+        : `${dname} isn't connected · ${solo ? `skip ${team.name}'s turn` : "skip to the next describer"}`;
+      const skip = el("button", { type: "button", class: "link-btn center", text: label });
       skip.addEventListener("click", skipDescriber);
       foot.push(skip);
     }
