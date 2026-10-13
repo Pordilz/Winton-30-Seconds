@@ -76,6 +76,12 @@
   const pad = (n) => String(n).padStart(2, "0");
   const rand = (n) => Math.floor(Math.random() * n);
   const termKey = (term) => term.trim().toLowerCase();
+  // Looser key for spotting duplicates: "The Lambo", "the lambo!" and
+  // "TheLambo" are the same term. Emoji-only terms fall back to termKey.
+  const dupKey = (term) => {
+    const key = termKey(term).normalize("NFKD").replace(/^the\s+/, "").replace(/[^a-z0-9]/g, "");
+    return key || termKey(term);
+  };
 
   function clampInt(value, min, max, fallback) {
     const n = parseInt(value, 10);
@@ -283,7 +289,7 @@
     const seen = new Set();
     const out = [];
     for (const t of [...BASE_TERMS, ...customTerms()]) {
-      const key = termKey(t.term);
+      const key = dupKey(t.term);
       if (!key || seen.has(key)) continue;
       seen.add(key);
       out.push({ term: t.term.trim(), category: t.category || "Added" });
@@ -300,11 +306,11 @@
   }
 
   function cleanNew(list) {
-    const existing = new Set(allTerms().map((t) => termKey(t.term)));
+    const existing = new Set(allTerms().map((t) => dupKey(t.term)));
     const out = [];
     for (const t of list) {
       const term = String(t.term || "").trim().slice(0, 80);
-      const key = termKey(term);
+      const key = dupKey(term);
       if (!key || existing.has(key)) continue;
       existing.add(key);
       out.push({ term, category: String(t.category || "Added").trim().slice(0, 30) || "Added" });
@@ -687,14 +693,19 @@
     const button = $("#add-btn");
     const term = input.value.trim();
     if (!term) return input.focus();
+    // A list typed into the one box ("a, b, c") becomes separate terms.
+    const parts = term.split(",").map((t) => t.trim()).filter(Boolean);
+    const terms = parts.length > 1 && window.confirm(`Add these as ${parts.length} separate terms?\n\n${parts.join("\n")}`)
+      ? parts : [term];
     button.disabled = true;
-    const result = await addTerms([{ term, category: pickedCat }]);
+    const result = await addTerms(terms.map((t) => ({ term: t, category: pickedCat })));
     button.disabled = false;
+    if (terms.length > 1) toast(addedMessage(result, terms.length));
     if (result.added) {
       haptic(15);
       input.value = "";
       if (REMOTE && !result.shared) toast("No signal. Saved on this phone for now.");
-    } else {
+    } else if (terms.length === 1) {
       toast("That one's already in the deck.");
     }
     renderDeck();
@@ -874,9 +885,9 @@
       toast("That link didn't have any terms in it.");
       return false;
     }
-    const seen = new Set(allTerms().map((t) => termKey(t.term)));
+    const seen = new Set(allTerms().map((t) => dupKey(t.term)));
     pendingImport = incoming.filter((t) => {
-      const key = termKey(t.term);
+      const key = dupKey(t.term);
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
