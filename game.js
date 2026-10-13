@@ -24,12 +24,12 @@
 
   // One riso ink per team, with a text colour that passes contrast on it.
   const TEAM_INKS = [
-    { bg: "#FF48B0", fg: "#1F2650" },
+    { bg: "#A27BFF", fg: "#1F2650" },
     { bg: "#3255A4", fg: "#F3EEE3" },
     { bg: "#FFE800", fg: "#1F2650" },
     { bg: "#006A70", fg: "#F3EEE3" },
     { bg: "#FF6C2F", fg: "#1F2650" },
-    { bg: "#765BA7", fg: "#F3EEE3" },
+    { bg: "#FF48B0", fg: "#1F2650" },
   ];
   const AWARD_INKS = [TEAM_INKS[0], TEAM_INKS[1], TEAM_INKS[2], { bg: "#1F2650", fg: "#F3EEE3" }];
   const BURST = "22,1 25.8,5.4 31.1,3.1 32.6,8.7 38.4,8.9 37.3,14.6 42.5,17.3 39,22 42.5,26.7 37.3,29.4 38.4,35.1 32.6,35.3 31.1,40.9 25.8,38.6 22,43 18.2,38.6 12.9,40.9 11.4,35.3 5.6,35.1 6.7,29.4 1.5,26.7 5,22 1.5,17.3 6.7,14.6 5.6,8.9 11.4,8.7 12.9,3.1 18.2,5.4";

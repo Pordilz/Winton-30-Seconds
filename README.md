@@ -2,7 +2,7 @@
 
 A take on the board game *30 Seconds* built from your group's own people, places, sayings and in-jokes. It runs in a phone browser, so you pass one phone around and don't need a board, cards, a die or an egg timer.
 
-It looks like a homemade zine printed on a risograph. Two inks, pink and blue, overprint into purple, and headlines sit slightly off-register. Guessing a term slams a rubber stamp on it, and each turn's score prints out as a till receipt.
+It looks like a homemade zine printed on a risograph. Two inks, violet and blue, overprint into a deep indigo, and headlines sit slightly off-register. Guessing a term slams a rubber stamp on it, and each turn's score prints out as a till receipt.
 
 ## How to play
 
