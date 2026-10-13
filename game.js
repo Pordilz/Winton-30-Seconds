@@ -38,8 +38,6 @@
   const BURST = "22,1 25.8,5.4 31.1,3.1 32.6,8.7 38.4,8.9 37.3,14.6 42.5,17.3 39,22 42.5,26.7 37.3,29.4 38.4,35.1 32.6,35.3 31.1,40.9 25.8,38.6 22,43 18.2,38.6 12.9,40.9 11.4,35.3 5.6,35.1 6.7,29.4 1.5,26.7 5,22 1.5,17.3 6.7,14.6 5.6,8.9 11.4,8.7 12.9,3.1 18.2,5.4";
 
   const $ = (sel) => document.querySelector(sel);
-  const SCREENS = ["setup", "deck", "lore", "import", "handoff", "play", "review", "winner",
-    "quiz-setup", "quiz-turn", "quiz-q", "quiz-reveal", "quiz-end"];
 
   let setup = null;  // { names, target, seconds, chaos }
   let game = null;   // { teams, target, seconds, chaos, current, deck, history }
@@ -125,12 +123,15 @@
     document.title = `${seconds <= 5 ? "🔴" : "⏱"} ${seconds}s · ${who}`;
   }
 
-  function show(name) {
-    if (!["play", "quiz-q"].includes(name)) document.title = tabTitle(name);
-    for (const id of SCREENS) {
-      const screen = $("#" + id);
-      screen.hidden = id !== name;
-      screen.classList.toggle("feed", id === name);
+  // Shows one screen and hides the rest. The online screens in online.js
+  // come through here too, so every screen is found from the page itself.
+  function show(name, title) {
+    if (title) document.title = title;
+    else if (!["play", "quiz-q"].includes(name)) document.title = tabTitle(name);
+    document.body.dataset.screen = name;
+    for (const screen of document.querySelectorAll("#app > .screen")) {
+      screen.hidden = screen.id !== name;
+      screen.classList.toggle("feed", screen.id === name);
     }
     window.scrollTo(0, 0);
   }
@@ -404,33 +405,36 @@
     return fams;
   }
 
-  // Deals five terms from the top of the deck, skipping any that clash with
-  // the card so far. The first pass also wants five different categories;
-  // later passes relax that, then the family rule, so a card always fills.
-  function drawCard() {
-    if (game.deck.length < CARD_SIZE * 3) {
-      const left = new Set(game.deck.map((t) => termKey(t.term)));
-      game.deck.push(...shuffle(allTerms().filter((t) => !left.has(termKey(t.term)))));
+  // Deals five terms from the top of a deck (game.deck here, or an online
+  // room's deck), skipping any that clash with the card so far. The first
+  // pass also wants five different categories; later passes relax that,
+  // then the family rule, so a card always fills.
+  function drawCard() { return dealCard(game); }
+
+  function dealCard(holder) {
+    if (holder.deck.length < CARD_SIZE * 3) {
+      const left = new Set(holder.deck.map((t) => termKey(t.term)));
+      holder.deck.push(...shuffle(allTerms().filter((t) => !left.has(termKey(t.term)))));
     }
     const picked = [];
     const taken = new Set();
     const cats = new Set();
     const pass = (newCategory, newFamilies) => {
-      for (let i = 0; i < game.deck.length && picked.length < CARD_SIZE; i++) {
-        const t = game.deck[i];
+      for (let i = 0; i < holder.deck.length && picked.length < CARD_SIZE; i++) {
+        const t = holder.deck[i];
         if (!t || (newCategory && cats.has(t.category))) continue;
         const fams = familiesOf(t.term);
         if (newFamilies && [...fams].some((f) => taken.has(f))) continue;
         picked.push(t);
         fams.forEach((f) => taken.add(f));
         cats.add(t.category);
-        game.deck[i] = null;
+        holder.deck[i] = null;
       }
     };
     pass(true, true);
     pass(false, true);
     pass(false, false);
-    game.deck = game.deck.filter(Boolean);
+    holder.deck = holder.deck.filter(Boolean);
     return picked.map((t) => ({ ...t, got: false }));
   }
 
@@ -1344,9 +1348,9 @@
     return root;
   }
 
-  function computeAwards() {
-    const h = game.history;
-    const name = (i) => game.teams[i].name;
+  function computeAwards(g = game) {
+    const h = g.history;
+    const name = (i) => g.teams[i].name;
     const awards = [];
 
     let best = null;
@@ -1364,7 +1368,7 @@
       awards.push({ label: "Clean sheet", value: "Not one term missed all game", badge: "0" });
     }
 
-    const lost = game.teams.map(() => 0);
+    const lost = g.teams.map(() => 0);
     h.forEach((t) => { if (typeof t.die === "number") lost[t.team] += Math.min(t.die, t.got); });
     const unluckiest = lost.indexOf(Math.max(...lost));
     if (lost[unluckiest] > 0) {
@@ -2012,9 +2016,22 @@
     if (timerId || quizTimer) e.preventDefault();
   });
 
+  // What online.js needs from the game.
+  window.W30 = {
+    $, el, svg, show, toast, setPlates, beep, haptic, unlockAudio, keepScreenOn, store, shuffle, rand, pad,
+    clampInt, termKey, dupKey, allTerms, dealCard, receiptFor, categoryLabel, attachSwipe, burst, computeAwards,
+    tabClock, syncDeck, syncQuiz, quizBank: () => QUIZ_BANK, remote: () => REMOTE,
+    CARD_SIZE, TEAM_INKS, AWARD_INKS, LETTERS, TWISTS, PIPS, CLASSIC_DIE, CHAOS_DIE, QUIZ_KINDS, TILES, SCORE,
+    ARROW, TICK, TAB, MIN_TEAMS, MAX_TEAMS,
+  };
+
   makeGrain();
   initSetup();
   if (!checkIncoming()) show("setup");
-  syncDeck();
-  syncQuiz();
+  // Inside a Discord Activity, discord-boot.js first routes Supabase through
+  // Discord's proxy; everywhere else WINTON_BOOT is already settled.
+  Promise.resolve(window.WINTON_BOOT).catch(() => {}).then(() => {
+    syncDeck();
+    syncQuiz();
+  });
 })();

@@ -96,6 +96,11 @@
         <span class="quiz-entry-note">Who said it? What were they on about?</span>
       </button>
 
+      <button id="open-online" class="btn btn-outline quiz-entry online-entry" type="button">
+        <span>Play online</span>
+        <span class="quiz-entry-note">Everyone on their own phone or PC · Discord, a stream or any call</span>
+      </button>
+
       <details class="how">
         <summary>How to play</summary>
         <ol>
@@ -437,12 +442,66 @@
       <button id="q-home" class="link-btn center" type="button">Back to the cover</button>
     </section>
 
+    <!-- ============================================================ online: menu -->
+    <section id="net-menu" class="screen" hidden>
+      <header class="strip">
+        <button id="net-menu-back" class="strip-btn" type="button">← Back</button>
+        <span>Play online</span>
+      </header>
+      <h1 class="plates headline" data-text="Online">Online</h1>
+      <p class="small">Play from different places: on a Discord call, a stream, or any call. Everyone opens the game on their own phone or PC.</p>
+      <p id="net-menu-note" class="error"></p>
+
+      <section class="block net-menu-block" aria-labelledby="net-join-h">
+        <h2 id="net-join-h" class="label"><span class="num">01</span> Join a room</h2>
+        <form id="net-join-form" class="add-form" autocomplete="off">
+          <label class="field"><span class="mini">Your name</span>
+            <input id="net-name" type="text" maxlength="24" placeholder="What the group calls you" enterkeyhint="next"></label>
+          <label class="field"><span class="mini">Room code</span>
+            <input id="net-code" class="net-code-input" type="text" maxlength="5" placeholder="ABCD" autocapitalize="characters" enterkeyhint="go"></label>
+          <div class="cta cta-sm"><button class="btn btn-primary btn-sm" type="submit">Join the room</button></div>
+          <button id="net-join-screen" class="link-btn" type="button">Join as the big screen instead (for streaming)</button>
+        </form>
+      </section>
+
+      <section class="block net-menu-block" aria-labelledby="net-host-h">
+        <h2 id="net-host-h" class="label"><span class="num">02</span> Or start a room</h2>
+        <div id="net-host-game" class="chips" role="group" aria-label="Game">
+          <button type="button" data-game="30s" aria-pressed="true">30 Seconds</button>
+          <button type="button" data-game="quiz" aria-pressed="false">The quiz</button>
+        </div>
+        <div class="net-host-row">
+          <button id="net-host-screen" class="btn btn-outline btn-sm" type="button">
+            <svg aria-hidden="true" width="20" height="18" viewBox="0 0 20 18" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="1.5" y="1.5" width="17" height="11" rx="1"/><path d="M6 16.5h8M10 12.5v4"/></svg>
+            Big screen to stream
+          </button>
+          <button id="net-host-play" class="btn btn-outline btn-sm" type="button">
+            <svg aria-hidden="true" width="14" height="20" viewBox="0 0 14 20" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="1.5" y="1.5" width="11" height="17" rx="2"/><path d="M5.5 15.5h3"/></svg>
+            Host from my phone
+          </button>
+        </div>
+        <p class="small">Streaming on Discord? Start the room on the PC you share, as the big screen. It never shows the describer's words. Everyone else joins on their phones.</p>
+      </section>
+    </section>
+
+    <!-- ============================================================ online: room -->
+    <section id="net" class="screen" hidden>
+      <header class="strip net-strip">
+        <span id="net-room"></span>
+        <span id="net-status" class="net-status"></span>
+        <button id="net-leave" class="strip-btn" type="button">Leave</button>
+      </header>
+      <div id="net-body" class="net-body"></div>
+    </section>
+
   </main>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
   <script src="config.js"></script>
   <script src="words.js"></script>
+  <script src="discord-boot.js"></script>
   <script src="game.js"></script>
+  <script src="online.js"></script>
 </body>
 </html>

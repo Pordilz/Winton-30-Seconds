@@ -700,6 +700,142 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus
 .podium .p3 .p-block { height: 64px; }
 .podium .step:only-child { grid-column: 2; }
 
+/* ------------------------------------------------------------------ online play */
+
+.online-entry { background: var(--paper-hi); }
+.net-menu-block { gap: 10px; }
+.net-code-input { text-transform: uppercase; letter-spacing: 0.3em; }
+.net-host-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 4px; }
+#net-menu-note:empty { display: none; }
+
+.net-strip { gap: 8px; }
+.net-status { margin-left: auto; font-size: 10px; letter-spacing: 0.1em; }
+.net-body { display: flex; flex-direction: column; flex: 1; }
+.net-view { display: flex; flex-direction: column; gap: 14px; }
+.net-wait { display: grid; place-items: center; min-height: 40vh; }
+
+.net-join {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center;
+  padding: 12px 10px 14px; border: 2.5px solid var(--ink); background: var(--paper-hi);
+  box-shadow: 6px 6px 0 var(--purple); transform: rotate(-0.6deg);
+  container-type: inline-size;
+}
+/* the code never breaks across lines, and grows with its card */
+.net-code { font-size: clamp(64px, 22vw, 96px); font-size: clamp(56px, 24cqi, 96px); line-height: 0.9; letter-spacing: 0.08em; white-space: nowrap; }
+.net-link { font-size: 12px; font-weight: 700; overflow-wrap: anywhere; }
+.net-games { justify-content: center; }
+.net-games button:disabled { opacity: 0.35; }
+
+.net-teams { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.net-team {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px; text-align: left;
+  min-height: 96px; padding: 10px; border: 2.5px solid var(--ink); background: var(--paper); cursor: pointer;
+}
+.net-team:disabled { cursor: default; }
+.net-team.mine { background: var(--yellow); box-shadow: 4px 4px 0 var(--ink); }
+.net-team-head { display: flex; align-items: center; gap: 8px; }
+.net-team-head .chip { width: 24px; height: 24px; font-size: 11px; }
+.net-team-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.net-team-list span, .net-players li {
+  padding: 2px 8px; border: 2px solid var(--ink); border-radius: 999px; background: var(--paper-hi);
+  font-size: 12px; font-weight: 700;
+}
+.net-team-list .off, .net-players .off { opacity: 0.45; border-style: dashed; }
+.net-players { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.net-names { font-size: 10px; letter-spacing: 0.06em; text-transform: none; }
+
+.net-settings { display: flex; flex-direction: column; }
+.net-settings .rules-grid { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+.net-name summary { font-size: 11px; }
+.net-name-row { display: flex; gap: 8px; padding-bottom: 8px; }
+.net-name-row input {
+  flex: 1; min-width: 0; border: 0; border-bottom: 3px solid var(--ink); background: transparent; color: var(--ink);
+  font-family: var(--display); font-weight: 800; font-stretch: 85%; font-size: 22px;
+}
+.net-name-row .btn { width: auto; }
+
+.net-strong { font-family: var(--display); font-weight: 800; font-stretch: 80%; font-size: 40px; line-height: 1; text-transform: uppercase; overflow-wrap: anywhere; }
+.net-strong.huge { font-size: clamp(56px, 8vw, 110px); }
+.net-describing { display: flex; flex-direction: column; gap: 6px; padding: 12px; border: 2.5px solid var(--ink); background: var(--paper-hi); }
+.net-stamps { display: flex; flex-wrap: wrap; gap: 8px; }
+.net-stamps i { width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid var(--ink); }
+.net-stamps i.on { background: var(--purple); }
+.net-clock .clock { height: auto; padding: 4px 0; }
+.net-clock .clock-num { font-size: clamp(110px, 32vw, 180px); }
+.net-clock .clock-num.huge { font-size: clamp(140px, 22vw, 300px); }
+.net-clock.urgent .clock-num { color: var(--ink); }
+.net-clock.urgent .clock-num::after { color: var(--red); }
+.net-clock.urgent .fuse-fill { background: radial-gradient(circle, var(--red) 2.2px, transparent 2.6px) 0 1px / 7px 7px; }
+
+.net-asked { margin: 0; font-size: 12px; line-height: 1.55; text-align: center; }
+.tile.chosen { outline: 4px solid var(--ink); outline-offset: 3px; }
+.tile .net-count { position: absolute; right: 8px; bottom: 8px; padding: 1px 7px; background: var(--paper-hi); color: var(--ink); border: 2px solid var(--ink); font-size: 12px; }
+.net-points { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 0; text-align: center; }
+
+.net-board { list-style: none; margin: 0; padding: 0; border-top: 2px solid var(--ink); }
+.net-board li { display: flex; align-items: center; gap: 10px; min-height: 44px; border-bottom: 2px dashed var(--ink); }
+.net-board li.me { background: linear-gradient(transparent 20%, var(--yellow) 20%, var(--yellow) 85%, transparent 85%); }
+.net-rank { width: 26px; font-weight: 700; }
+.net-who { flex: 1; min-width: 0; font-family: var(--display); font-weight: 800; font-stretch: 85%; font-size: 20px; overflow-wrap: anywhere; }
+.net-gain { color: var(--purple-ink); }
+.net-score { font-family: var(--display); font-weight: 800; font-stretch: 75%; font-size: 24px; font-variant-numeric: tabular-nums; }
+
+/* PC and Discord: room to breathe. Keyboard hints only where there's a keyboard.
+   Online views come in two columns (.net-col); on a phone the columns
+   dissolve and everything stacks. */
+@media (hover: none) { .play-foot .mini:last-child:not(:first-child) { display: none; } }
+.net-cols, .net-col { display: contents; }
+@media (min-width: 760px) {
+  #app { max-width: 560px; }
+  body[data-screen="net"] #app, body[data-screen="net-menu"] #app { max-width: 760px; }
+  .net-view.lobby .net-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 14px 24px; }
+  .net-view.lobby .net-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .net-teams { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .tile { min-height: 110px; }
+  .tile .opt { font-size: 22px; }
+}
+
+/* The big screen: built to be streamed full screen on a call. */
+body.net-big[data-screen="net"] #app { max-width: min(1440px, 100%); padding-left: 32px; padding-right: 32px; }
+.net-view.big { gap: 20px; }
+.net-view.big .headline { font-size: clamp(64px, 9vw, 140px); }
+.net-view.big .winner-name { margin-top: 12px; }
+.net-view.big .net-code { font-size: clamp(96px, 16vw, 220px); font-size: clamp(72px, 24cqi, 220px); }
+.net-view.big .net-link { font-size: 18px; }
+.net-view.big .net-asked { font-family: var(--display); font-weight: 800; font-stretch: 85%; font-size: clamp(22px, 2.2vw, 34px); line-height: 1.15; text-align: left; }
+.net-view.big .team-name { font-size: 28px; }
+.net-view.big .team-score { font-size: 40px; }
+.net-view.big .bar { height: 18px; }
+.net-view.big .q-prompt { font-size: clamp(32px, 4.4vw, 64px); }
+.net-view.big .q-quote { font-size: clamp(24px, 3vw, 42px); }
+.net-view.big .tile { min-height: 130px; }
+.net-view.big .tile .opt { font-size: clamp(22px, 2.4vw, 34px); }
+.net-view.big .tile .shape { font-size: 28px; }
+.net-view.big .check .t { font-size: clamp(20px, 2.1vw, 30px); }
+.net-view.big .final-list { font-size: 20px; gap: 10px; }
+.net-view.big > .mode-note { align-self: center; }
+.net-view.big .check .why { font-size: 15px; }
+.net-view.big .net-board li { min-height: 56px; }
+.net-view.big .net-who { font-size: 28px; }
+.net-view.big .net-score { font-size: 34px; }
+.wheel.big li { font-size: 16px; padding: 12px 18px; }
+@media (min-width: 900px) {
+  .net-view.big .net-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 20px 56px; }
+  .net-view.big .net-col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .net-view.big.lobby .net-cols { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  .net-view.big.question .net-cols { grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr); align-items: center; }
+  .net-view.big.question .clock-num.huge { font-size: clamp(120px, 15vw, 240px); }
+  .net-view.big .tiles { gap: 16px; }
+  .net-view.big.play { align-items: center; text-align: center; }
+  .net-view.big.play > .strip { align-self: stretch; }
+  .net-view.big.play .net-describing .label-row { justify-content: center; gap: 12px; }
+  .net-view.big.play .net-describing { align-self: stretch; align-items: center; }
+  .net-view.big .net-stamps i { width: 56px; height: 56px; }
+}
+
+/* Inside a Discord Activity the cover's online button isn't needed. */
+.in-discord #open-online { display: none; }
+
 /* shorter phones: keep all five terms and the clock on one screen */
 @media (max-height: 760px) {
   #play.screen { gap: 8px; }

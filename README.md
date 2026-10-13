@@ -1,6 +1,6 @@
 # Winton 30 Seconds
 
-A take on the board game *30 Seconds* built from your group's own people, places, sayings and in-jokes. It runs in a phone browser, so you pass one phone around and don't need a board, cards, a die or an egg timer.
+A take on the board game *30 Seconds* built from your group's own people, places, sayings and in-jokes. It runs in a phone browser, so you pass one phone around and don't need a board, cards, a die or an egg timer. When you're not in the same room, everyone can play on their own phone or PC over a Discord call (see [Playing online](#playing-online)).
 
 It looks like a homemade zine printed on a risograph. Two inks, violet and blue, overprint into a deep indigo, and headlines sit slightly off-register. Guessing a term slams a rubber stamp on it, and each turn's score prints out as a till receipt.
 
@@ -57,6 +57,66 @@ Each phone remembers which questions it has asked recently and serves fresh ones
 - **Saving:** the game saves after every turn. If the page refreshes or the phone locks, a **Resume last game** button brings it back.
 - **Works offline:** each phone keeps a copy of the deck, the lore and the quiz after the first time it opens the game, so a game with no signal still uses the real deck.
 - **Phone features:** the screen stays on during a turn, and the phone beeps for the last five seconds and vibrates when time runs out (on phones that allow it).
+
+## Playing online
+
+For game nights on a call: everyone joins one room from their own phone or PC, and the game keeps every device in sync. Talk over Discord (or any call) as normal.
+
+### Start a room
+
+1. Tap **Play online** on the cover and pick **30 Seconds** or **The quiz**.
+2. Choose how to host:
+   - **Big screen to stream:** this device shows the shared screen (the clock, the scores, the questions) but doesn't play. Open it on a PC and share that window on the call with Discord's screen share or Go Live, so everyone sees it.
+   - **Host from my phone:** you host and play on the same device. Use this when nobody's streaming.
+3. The room shows a four-letter code and a link. Everyone else opens the game, taps **Play online**, types their name and the code, and taps **Join the room** (or just opens the link).
+4. In 30 Seconds, everyone picks a team on their own device. The host sets the house rules (or taps **Shuffle the teams**) and starts the game.
+
+### 30 Seconds online
+
+- The game picks the describer, taking turns within each team. **Only the describer's device shows the card**; the big screen and everyone else see the clock, who's describing and how many terms they've got.
+- The describer rolls the die, starts the clock and taps or swipes terms as their team shouts the answers on the call. **Card cleared · next card** works the same as in person.
+- When time's up, everyone sees the card. The describer or the host fixes any mistakes and banks the points.
+
+### The quiz online
+
+- Every player answers on their own device, Kahoot-style: the spin and the question show on every screen, and each player taps one of the four colours.
+- Scoring is the same as the pass-the-phone quiz (speed, streaks, the final question counts double), and **every player has their own 50:50**.
+- The answer is revealed as soon as everyone has answered, or when the clock runs out. The reveal shows how many people picked each answer and the leaderboard. The host moves on with **Next question** (or **Reveal now** to skip the wait).
+
+### On a PC
+
+The layout widens on a PC, and the big screen fills a full-screen browser window for streaming. Keyboard shortcuts:
+
+- **1 to 5** mark terms on the card and **N** deals the next card.
+- **1 to 4** (or **A to D**) answer a quiz question and **F** uses the 50:50.
+- **Enter** presses the main button.
+
+### If someone drops out
+
+- Refreshing the page puts you straight back in the room.
+- If the host drops out, the device that's been in the room longest takes over and the game carries on from where it was.
+- If the describer drops out before their turn starts, the host can skip to the next person on that team. Mid-turn, the host can end the turn for them.
+
+Rooms run over Supabase Realtime in the same project as the deck. Nothing about a room is saved in the database; it only exists while people are in it.
+
+### Playing inside Discord (Activity)
+
+The game can also run inside Discord as an Activity, so nobody needs a link or a code: everyone in the voice channel who opens the Activity lands in the same room. The first person in hosts, and each player types their name once. To set it up:
+
+1. Go to the [Discord Developer Portal](https://discord.com/developers/applications) and create an application (call it Winton).
+2. Under **Activities → URL Mappings**, add two mappings (targets have no `https://`):
+
+   | Prefix | Target |
+   | --- | --- |
+   | `/` | `winton-30-seconds.vercel.app` |
+   | `/supabase` | `pzlrihoqzbddbwuzcudp.supabase.co` |
+
+   The second one lets the game reach the deck and the rooms, because an Activity can only talk to addresses that are mapped.
+3. Under **Activities → Settings**, tick **Enable Activities**.
+4. Copy the **Application ID** from **General Information** and add it to the Vercel project as the environment variable **`DISCORD_CLIENT_ID`**, then redeploy.
+5. In Discord, join a voice channel, open the Activities launcher (the rocket) and pick Winton. While the app is unpublished, Discord only shows it to the app's owner and team, so add the group to a team in the Developer Portal if they can't see it.
+
+Until `DISCORD_CLIENT_ID` is set, the game can't connect from inside Discord; everywhere else it works as normal. Streaming the big screen needs none of this.
 
 ## The group deck
 
@@ -115,6 +175,7 @@ Keep the group's real terms in the database, not in `words.js`: this repo is pub
 The game is hosted on Vercel, connected to this repo, so every push deploys on its own.
 
 - The Vercel project needs two environment variables: **`SUPABASE_URL`** and **`SUPABASE_PUBLISHABLE_KEY`**. The build (`node build.js`) copies the game into `dist/` and writes them into `config.js`, so they never have to be committed. The publishable key is meant for browsers. The database's row-level security only lets it read the game's three tables and add new terms.
+- **`DISCORD_CLIENT_ID`** is optional: the Discord application's ID, for running the game as a Discord Activity. It's public too.
 - Anyone with the game's link can read the deck, the lore and the quiz, so share the link with the group rather than posting it publicly.
 
 **Running it locally:** open `index.html` in a browser for the starter deck. For the real deck, run:
@@ -125,12 +186,17 @@ SUPABASE_URL=https://<project>.supabase.co SUPABASE_PUBLISHABLE_KEY=<key> node b
 
 and serve the `dist/` folder.
 
+To try online play without the database, add `?net=local` to the address and open the game in several tabs of the same browser: the tabs talk to each other directly. Add `&discord=mock` as well to try the Discord Activity flow.
+
 ## Files
 
 | File | What it is |
 | --- | --- |
-| `index.html` | The screens: cover and setup, deck builder, the lore, incoming terms, up next, the 30 seconds, time's up and winner, plus the quiz's setup, spin, question, reveal and podium. |
+| `index.html` | The screens: cover and setup, deck builder, the lore, incoming terms, up next, the 30 seconds, time's up and winner, the quiz's setup, spin, question, reveal and podium, and the online menu and room. |
 | `game.js` | Game logic: loading the group deck from Supabase, dealing cards without related terms, dice, timer, swipe, scoring, receipts, the lore, awards, share links, saving, and the quiz. |
+| `online.js` | Online rooms: joining by code, choosing the host, syncing every device, the big screen, and the online versions of 30 Seconds and the quiz. |
+| `discord-boot.js` | Runs first inside a Discord Activity: loads Discord's SDK, routes the database through Discord's proxy and picks the room for the voice channel. Does nothing outside Discord. |
+| `vendor/` | Bundled copies of supabase-js (for the rooms) and Discord's Embedded App SDK, both MIT licensed (`vendor/LICENSES.md`). |
 | `style.css` | The riso look: inks, overprint, halftone shadows, stamps and the receipt. |
 | `words.js` | The starter deck of example terms and sample quiz questions, used when there's no database. |
 | `build.js` | Vercel's build step. Copies the game into `dist/` and writes `config.js` from the environment variables. |
