@@ -135,4 +135,5 @@ and serve the `dist/` folder.
 | `words.js` | The starter deck of example terms and sample quiz questions, used when there's no database. |
 | `build.js` | Vercel's build step. Copies the game into `dist/` and writes `config.js` from the environment variables. |
 | `vercel.json` | Tells Vercel to run `build.js` and serve `dist/`. |
+| `icons/`, `manifest.webmanifest` | The riso "30" icon for the browser tab and the phone home screen ("Add to Home Screen" opens the game full screen). |
 | `fonts/` | Bricolage Grotesque and Space Mono, bundled so the game works offline. Both are under the SIL Open Font License; the licence files are in the folder. |

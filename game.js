@@ -101,7 +101,32 @@
     node.dataset.text = text;
   }
 
+  // The browser tab follows the game: whose turn it is, and the clock while
+  // it's running, so a glance at the tab says what's happening.
+  const TAB = "Winton · 30 Seconds";
+  function tabTitle(name) {
+    const team = game && game.teams[game.current] ? game.teams[game.current].name : "";
+    const quizTeamName = quiz && quiz.teams[quiz.current] ? quiz.teams[quiz.current].name : "";
+    return {
+      deck: "Feed the deck · Winton",
+      lore: "The lore · Winton",
+      import: "New terms · Winton",
+      handoff: `${team} up next · Winton`,
+      review: "Time's up · Winton",
+      winner: `🏆 ${team} win · Winton`,
+      "quiz-setup": "The quiz · Winton",
+      "quiz-turn": `${quizTeamName} up next · Winton quiz`,
+      "quiz-reveal": "The reveal · Winton quiz",
+      "quiz-end": "🏆 The podium · Winton quiz",
+    }[name] || TAB;
+  }
+
+  function tabClock(seconds, who) {
+    document.title = `${seconds <= 5 ? "🔴" : "⏱"} ${seconds}s · ${who}`;
+  }
+
   function show(name) {
+    if (!["play", "quiz-q"].includes(name)) document.title = tabTitle(name);
     for (const id of SCREENS) {
       const screen = $("#" + id);
       screen.hidden = id !== name;
@@ -1201,6 +1226,7 @@
       if (whole !== lastWhole) {
         setPlates(clock, String(whole));
         $("#clock-sr").textContent = `${whole} seconds left`;
+        tabClock(whole, currentTeam().name);
         $("#play").classList.toggle("urgent", whole <= 5);
         if (lastWhole !== null && whole > 0 && whole <= 5) beep(880, 0.06, 0.12);
         lastWhole = whole;
@@ -1771,6 +1797,7 @@
       if (whole !== lastWhole) {
         setPlates(clock, String(whole));
         $("#q-clock-sr").textContent = `${whole} seconds left`;
+        tabClock(whole, quizTeam().name);
         $("#quiz-q").classList.toggle("urgent", whole <= 5);
         if (lastWhole !== null && whole > 0 && whole <= 5) beep(880, 0.06, 0.12);
         lastWhole = whole;

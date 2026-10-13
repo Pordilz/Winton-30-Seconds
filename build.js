@@ -11,13 +11,17 @@ const path = require("path");
 
 const root = __dirname;
 const out = path.join(root, "dist");
-const FILES = ["index.html", "style.css", "game.js", "words.js"];
+const FILES = ["index.html", "style.css", "game.js", "words.js", "manifest.webmanifest"];
+const DIRS = ["fonts", "icons"];
 
 fs.rmSync(out, { recursive: true, force: true });
-fs.mkdirSync(path.join(out, "fonts"), { recursive: true });
+fs.mkdirSync(out, { recursive: true });
 for (const file of FILES) fs.copyFileSync(path.join(root, file), path.join(out, file));
-for (const file of fs.readdirSync(path.join(root, "fonts"))) {
-  fs.copyFileSync(path.join(root, "fonts", file), path.join(out, "fonts", file));
+for (const dir of DIRS) {
+  fs.mkdirSync(path.join(out, dir), { recursive: true });
+  for (const file of fs.readdirSync(path.join(root, dir))) {
+    fs.copyFileSync(path.join(root, dir, file), path.join(out, dir, file));
+  }
 }
 
 const url = (process.env.SUPABASE_URL || "").trim();
