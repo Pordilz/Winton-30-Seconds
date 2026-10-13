@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f3ee" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#161412" media="(prefers-color-scheme: dark)">
+  <title>Winton 30 Seconds</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app">
+
+    <!-- Setup -->
+    <section id="setup" class="screen">
+      <header class="brand">
+        <p class="eyebrow">The group edition</p>
+        <h1>Winton 30 Seconds</h1>
+        <p class="muted" id="deck-info"></p>
+      </header>
+
+      <button id="resume" class="btn btn-secondary" type="button" hidden>Resume last game</button>
+
+      <div class="panel">
+        <h2>Teams</h2>
+        <ol id="team-list" class="team-list"></ol>
+        <button id="add-team" class="btn btn-ghost" type="button">+ Add team</button>
+      </div>
+
+      <div class="panel settings">
+        <label>Points to win
+          <input id="target" type="number" min="5" max="200" value="25" inputmode="numeric">
+        </label>
+        <label>Seconds per turn
+          <input id="seconds" type="number" min="10" max="120" value="30" inputmode="numeric">
+        </label>
+      </div>
+
+      <p id="setup-error" class="error" role="alert" hidden></p>
+      <button id="start-game" class="btn btn-primary" type="button">Start game</button>
+
+      <details class="panel rules">
+        <summary>How to play</summary>
+        <ol>
+          <li>Split into teams. On your turn, one person is the describer.</li>
+          <li>Roll the die first. Whatever it lands on (0, 1 or 2) comes off your score for that turn.</li>
+          <li>Start the clock. The describer sees five terms and has to get their team to say them, in any order.</li>
+          <li>No saying the term, any part of it, or "sounds like" / "rhymes with". No spelling it out either.</li>
+          <li>Tap each term as your team gets it. When the time runs out, everyone checks the results.</li>
+          <li>Points = terms guessed minus the die. First team to the target wins.</li>
+          <li>Pass the phone to the next team's describer.</li>
+        </ol>
+      </details>
+    </section>
+
+    <!-- Between turns -->
+    <section id="handoff" class="screen" hidden>
+      <ol id="scoreboard" class="scoreboard"></ol>
+
+      <div class="panel up-next">
+        <p class="eyebrow">Up next</p>
+        <h2 id="team-up"></h2>
+        <p class="muted">Pick a describer and hand them the phone. Don't let the guessers see the screen.</p>
+
+        <div class="die" id="die" aria-live="polite" aria-label="Die not rolled yet">?</div>
+        <p id="die-note" class="muted">Roll the die. Whatever it lands on comes off this turn's score.</p>
+
+        <button id="roll" class="btn btn-secondary" type="button">Roll the die</button>
+        <button id="go" class="btn btn-primary" type="button" hidden>Start the clock</button>
+      </div>
+
+      <button id="quit" class="btn btn-ghost" type="button">End game</button>
+    </section>
+
+    <!-- Describing -->
+    <section id="play" class="screen" hidden>
+      <div class="timer-wrap">
+        <div id="timer" class="timer" aria-live="off">30</div>
+        <div class="timer-track"><div id="timer-bar" class="timer-bar"></div></div>
+      </div>
+      <p class="muted center">Tap each one your team gets.</p>
+      <ul id="terms" class="terms"></ul>
+      <p class="center count"><span id="got-count">0</span> / 5</p>
+      <button id="end-early" class="btn btn-ghost" type="button">End turn early</button>
+    </section>
+
+    <!-- After the clock -->
+    <section id="review" class="screen" hidden>
+      <h2 id="review-title" class="center">Time's up!</h2>
+      <p class="muted center">Check the results with the other team and fix any mistakes.</p>
+      <ul id="review-terms" class="terms"></ul>
+      <dl class="tally">
+        <div><dt>Guessed</dt><dd id="tally-got">0</dd></div>
+        <div><dt>Die</dt><dd id="tally-die">0</dd></div>
+        <div><dt>Points</dt><dd id="tally-points">0</dd></div>
+      </dl>
+      <button id="confirm" class="btn btn-primary" type="button">Add points</button>
+    </section>
+
+    <!-- Game over -->
+    <section id="winner" class="screen" hidden>
+      <header class="brand">
+        <p class="eyebrow">Winner</p>
+        <h1 id="winner-name"></h1>
+      </header>
+      <ol id="final-scores" class="scoreboard"></ol>
+      <button id="rematch" class="btn btn-primary" type="button">Rematch</button>
+      <button id="new-game" class="btn btn-ghost" type="button">Change teams</button>
+    </section>
+
+  </main>
+
+  <script src="words.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
