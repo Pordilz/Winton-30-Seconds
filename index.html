@@ -33,7 +33,10 @@
 
       <div class="deck-line">
         <span id="deck-info" class="mini"></span>
-        <button id="open-deck" class="pill" type="button">Feed the deck</button>
+        <div class="deck-pills">
+          <button id="open-lore" class="pill" type="button" hidden>The lore</button>
+          <button id="open-deck" class="pill" type="button">Feed the deck</button>
+        </div>
       </div>
 
       <button id="resume" class="btn btn-outline" type="button" hidden>Resume last game</button>
@@ -71,6 +74,13 @@
           </div>
           <button id="chaos" class="switch" type="button" role="switch" aria-checked="false" aria-labelledby="chaos-label"><span></span></button>
         </div>
+        <div id="after-dark-row" class="switch-row" hidden>
+          <div class="switch-text">
+            <span class="mini" id="after-dark-label">After dark</span>
+            <span class="small" id="after-dark-note"></span>
+          </div>
+          <button id="after-dark" class="switch" type="button" role="switch" aria-checked="false" aria-labelledby="after-dark-label"><span></span></button>
+        </div>
       </section>
 
       <p id="setup-error" class="error" role="alert" hidden></p>
@@ -105,6 +115,7 @@
 
       <h1 class="plates headline" data-text="Feed the deck">Feed the deck</h1>
       <p class="small">A name, a place, a saying, a night nobody will let go of. If most of the group would get it, it goes in.</p>
+      <p id="deck-mode" class="mode-note"></p>
 
       <form id="add-form" class="add-form" autocomplete="off">
         <label class="field">
@@ -113,14 +124,20 @@
         </label>
         <div id="cat-chips" class="chips" role="group" aria-label="Category"></div>
         <div class="cta cta-sm">
-          <button class="btn btn-primary btn-sm" type="submit">Add to the deck</button>
+          <button id="add-btn" class="btn btn-primary btn-sm" type="submit">Add to the deck</button>
         </div>
       </form>
 
       <section class="mine" aria-labelledby="mine-h">
-        <h2 id="mine-h" class="label-row"><span>Added on this phone</span><span id="mine-count">0</span></h2>
+        <h2 id="mine-h" class="label-row"><span>Only on this phone</span><span id="mine-count">0</span></h2>
         <ul id="mine-list" class="mine-list"></ul>
-        <p id="mine-empty" class="small">Nothing yet. Terms you add here stay on this phone until you share them.</p>
+        <p id="mine-empty" class="small"></p>
+        <button id="push-local" class="btn btn-outline btn-sm" type="button" hidden>Send these to the group deck</button>
+      </section>
+
+      <section id="recent" class="mine" aria-labelledby="recent-h" hidden>
+        <h2 id="recent-h" class="label-row"><span>Just added by the group</span></h2>
+        <ul id="recent-list" class="mine-list"></ul>
       </section>
 
       <div class="share-row">
@@ -140,15 +157,27 @@
         </label>
         <button id="paste-add" class="btn btn-outline btn-sm" type="button">Add them all</button>
       </div>
-      <p class="small center">Whoever opens your link gets your terms added to their deck. No accounts.</p>
+      <p id="share-note" class="small center">Whoever opens your link gets your terms added to their deck. No accounts.</p>
       <button id="copy-words" class="link-btn center" type="button">Copy as lines for words.js</button>
+    </section>
+
+    <!-- ============================================================ the lore -->
+    <section id="lore" class="screen" hidden>
+      <header class="strip">
+        <button id="lore-back" class="strip-btn" type="button">← Back</button>
+        <span id="lore-source"></span>
+      </header>
+      <h1 class="plates headline" data-text="The lore">The lore</h1>
+      <p id="lore-sub" class="small"></p>
+      <div id="lore-tabs" class="chips" role="group" aria-label="Lore sections"></div>
+      <div id="lore-body" class="lore-body"></div>
     </section>
 
     <!-- ============================================================ incoming terms -->
     <section id="import" class="screen" hidden>
       <header class="strip"><span>Incoming</span><span>From a friend</span></header>
       <h1 class="plates headline" id="import-title" data-text=""></h1>
-      <p class="small">Someone sent you terms for the deck. They'll be saved on this phone.</p>
+      <p id="import-note" class="small">Someone sent you terms for the deck. They'll be saved on this phone.</p>
       <ul id="import-list" class="mine-list"></ul>
       <p id="import-more" class="small"></p>
       <div class="cta">
@@ -215,7 +244,7 @@
     <section id="review" class="screen" hidden>
       <header class="strip"><span id="review-team"></span><span id="review-turn"></span></header>
       <div class="stamp-wrap"><h1 id="review-title" class="big-stamp">Time's up</h1></div>
-      <p class="small center">Both teams check the card. Tap a term to fix it.</p>
+      <p class="small center">Both teams check the card. Tap a term to fix it. The small print is why it's in the deck.</p>
       <ul id="review-terms" class="check-list"></ul>
 
       <div class="receipt-wrap">
@@ -265,6 +294,7 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
+  <script src="config.js"></script>
   <script src="words.js"></script>
   <script src="game.js"></script>
 </body>

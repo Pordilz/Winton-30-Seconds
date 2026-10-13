@@ -1,20 +1,23 @@
 // =====================================================================
-//  YOUR GROUP'S WORDS
+//  STARTER DECK
 // =====================================================================
 //
-//  This is the only file you need to edit to make the game yours.
+//  The real group deck lives in the Supabase database (the winton_terms
+//  table) and loads when the game is deployed with its Supabase settings.
+//  See "The group deck" in README.md.
+//
+//  This file is the fallback: the deck a phone uses before it has ever
+//  connected, or a copy of the game with no database at all. The terms
+//  below are made-up EXAMPLES so the game works out of the box. Keep
+//  your group's real terms in the database, not here: this repo is
+//  public.
 //
 //  - Each line in "quotes" is one term the describer has to get their
 //    team to guess.
 //  - Keep the comma at the end of each line.
-//  - Rename, add or delete categories freely. They only show up as a
-//    small hint under each term.
 //  - Duplicate terms are ignored, so don't worry about repeats.
-//
-//  The terms below are made-up EXAMPLES so you can try the game out.
-//  Delete them and replace them with your group's own people, places,
-//  sayings and in-jokes. Aim for at least 200 terms so a whole evening
-//  goes by without repeats (every turn uses 5).
+//  - Optional: a list called AFTER_DARK adds cruder terms that only
+//    play when "After dark" is switched on.
 // =====================================================================
 
 const WORDS = {
