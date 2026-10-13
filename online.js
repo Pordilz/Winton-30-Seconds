@@ -13,7 +13,8 @@
 //  everyone in the voice channel lands in the same game.
 //
 //  The host is whoever has been in the room longest. If the host drops
-//  out, the next device takes over from the last state it saw.
+//  out, the next device takes over from the last state it saw, and if the
+//  host comes back it carries on from wherever the room has got to.
 // =====================================================================
 
 (() => {
@@ -105,9 +106,57 @@
 
   // ------------------------------------------------------------------ transport
   //
-  // Both transports offer the same small surface: send a broadcast, track
-  // this device's presence, and close. Handlers get messages, the list of
-  // devices in the room, and the connection status.
+  // Both transports offer the same small surface: send a broadcast, say who
+  // this device is, and close. Handlers get messages, the list of devices in
+  // the room, and the connection status.
+  //
+  // Who's in the room rides on the room's own messages: every device says
+  // it's here every few seconds, and anyone who goes quiet has left. This
+  // used to be Supabase's Presence, but when its servers time out they
+  // throw the device off the channel, so it never shows up as a player.
+
+  const BEAT = 4000;
+  const GONE_AFTER = 16000;
+
+  function roster(meta, post, onChange) {
+    let mine = meta;
+    const peers = new Map(); // id -> { meta, seen }
+    let heard = Date.now();
+    let deaf = false;
+    const emit = () => onChange([mine, ...[...peers.values()].map((p) => p.meta)]);
+    const say = (hello) => post({ kind: "here", meta: mine, hello: !!hello });
+    const beat = setInterval(() => {
+      say();
+      // Hearing nobody at all looks just like this device's own connection
+      // being down, so people only time out while others still get through.
+      const now = Date.now();
+      if (now - heard > GONE_AFTER) { deaf = true; return; }
+      let gone = false;
+      for (const [id, p] of peers) if (now - p.seen > GONE_AFTER) { peers.delete(id); gone = true; }
+      if (gone) emit();
+    }, BEAT);
+    return {
+      start() { say(true); emit(); },
+      receive(data) {
+        if (!data) return;
+        const now = Date.now();
+        // Back in touch: give everyone a fresh window to be heard again.
+        if (deaf) { deaf = false; for (const p of peers.values()) p.seen = now; }
+        heard = now;
+        if (data.kind === "here" && data.meta && data.meta.id && data.meta.id !== mine.id) {
+          const old = peers.get(data.meta.id);
+          peers.set(data.meta.id, { meta: data.meta, seen: now });
+          if (data.hello) say();
+          if (!old || JSON.stringify(old.meta) !== JSON.stringify(data.meta)) emit();
+        } else if (data.kind === "bye" && peers.delete(data.id)) {
+          emit();
+        }
+      },
+      track(m) { mine = m; say(); emit(); },
+      bye() { post({ kind: "bye", id: mine.id }); },
+      stop() { clearInterval(beat); },
+    };
+  }
 
   async function supabaseNet(room, meta, h) {
     const R = W.remote();
@@ -117,20 +166,21 @@
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
       realtime: { params: { eventsPerSecond: 20 } },
     });
-    const ch = client.channel(`winton:${room}`, { config: { broadcast: { self: false }, presence: { key: meta.id } } });
+    const ch = client.channel(`winton:${room}`, { config: { broadcast: { self: false } } });
+    // Only while joined: a channel that isn't falls back to one web request per message.
+    const who = roster(meta, (data) => { if (ch.state === "joined") ch.send({ type: "broadcast", event: "roster", payload: data }); }, h.presence);
     for (const event of ["state", "act", "hello"]) ch.on("broadcast", { event }, (m) => h.msg(event, m.payload));
-    ch.on("presence", { event: "sync" }, () => {
-      const list = Object.values(ch.presenceState()).map((metas) => metas[metas.length - 1]).filter(Boolean);
-      h.presence(list);
-    });
-    ch.subscribe(async (status) => {
+    ch.on("broadcast", { event: "roster" }, (m) => who.receive(m.payload));
+    ch.subscribe((status) => {
       h.status(status);
-      if (status === "SUBSCRIBED") await ch.track(meta);
+      if (status === "SUBSCRIBED") who.start();
     });
+    const bye = () => who.bye();
+    addEventListener("pagehide", bye);
     return {
       send: (event, payload) => ch.send({ type: "broadcast", event, payload }),
-      track: (m) => ch.track(m),
-      close: () => client.removeAllChannels(),
+      track: (m) => { who.track(m); return Promise.resolve("ok"); },
+      close: () => { who.stop(); bye(); removeEventListener("pagehide", bye); client.removeAllChannels(); },
     };
   }
 
@@ -138,40 +188,22 @@
   // add ?net=local to the address.
   function localNet(room, meta, h) {
     const bc = new BroadcastChannel(`winton-local:${room}`);
-    const peers = new Map();
-    let mine = meta;
-    const emit = () => h.presence([mine, ...[...peers.values()].map((p) => p.meta)]);
+    const who = roster(meta, (data) => bc.postMessage(data), h.presence);
     bc.onmessage = ({ data }) => {
       if (!data) return;
-      if (data.kind === "presence") {
-        peers.set(data.meta.id, { meta: data.meta, seen: Date.now() });
-        if (data.hello) bc.postMessage({ kind: "presence", meta: mine });
-        emit();
-      } else if (data.kind === "leave") {
-        peers.delete(data.id);
-        emit();
-      } else if (data.kind === "msg") {
-        h.msg(data.event, data.payload);
-      }
+      if (data.kind === "msg") h.msg(data.event, data.payload);
+      else who.receive(data);
     };
-    const beat = setInterval(() => {
-      bc.postMessage({ kind: "presence", meta: mine });
-      const now = Date.now();
-      let gone = false;
-      for (const [id, p] of peers) if (now - p.seen > 5000) { peers.delete(id); gone = true; }
-      if (gone) emit();
-    }, 1500);
-    const bye = () => bc.postMessage({ kind: "leave", id: mine.id });
+    const bye = () => who.bye();
     addEventListener("pagehide", bye);
     setTimeout(() => {
       h.status("SUBSCRIBED");
-      bc.postMessage({ kind: "presence", meta: mine, hello: true });
-      emit();
+      who.start();
     }, 30);
     return {
       send: (event, payload) => { bc.postMessage({ kind: "msg", event, payload }); return Promise.resolve("ok"); },
-      track: (m) => { mine = m; bc.postMessage({ kind: "presence", meta: mine }); emit(); return Promise.resolve("ok"); },
-      close: () => { clearInterval(beat); bye(); removeEventListener("pagehide", bye); bc.close(); },
+      track: (m) => { who.track(m); return Promise.resolve("ok"); },
+      close: () => { who.stop(); bye(); removeEventListener("pagehide", bye); bc.close(); },
     };
   }
 
@@ -184,7 +216,7 @@
   let net = null;
   let me = null;          // { id, name, role: "player"|"screen", at }
   let room = null;
-  let members = [];       // devices connected right now (presence)
+  let members = [];       // devices in the room right now (see roster)
   let S = null;
   let P = { deck: [] };
   let amHost = false;
@@ -192,7 +224,6 @@
   let hostLoop = null;
   let lastSent = 0;
   let clockBase = null;   // { left, at } for a smooth local countdown
-  let gotState = false;   // heard from a host since joining
   let createdRoom = false;
   let joinedAt = 0;
 
@@ -222,13 +253,18 @@
     net.send("state", S);
   }
 
-  // A host ignores everyone else's state; who hosts is settled by elect().
-  // Otherwise take anything newer, or anything from a different host.
+  // Take anything newer, or anything from a different host. Who hosts is
+  // settled by elect(), so a host only takes another host's game when it's
+  // further on: someone ran the room while this device was away (a locked
+  // phone, say), and the game carries on from there.
   function receiveState(st) {
-    if (!st || typeof st.v !== "number" || amHost) return;
+    if (!st || typeof st.v !== "number") return;
+    if (amHost) {
+      if (S && st.host !== me.id && st.v > S.v) { S = st; takeOver(); }
+      return;
+    }
     if (S && st.host === S.host && st.v <= S.v) return;
     S = st;
-    gotState = true;
     syncClock();
     render();
   }
@@ -262,28 +298,35 @@
         if (!p) { S.players.push({ id: m.id, name: m.name, team: pickTeam() }); changed = true; }
         else if (p.name !== m.name) { p.name = m.name; changed = true; }
       }
-      if (changed) { syncTeams(); bump(); return; }
+      if (changed) { syncTeams(); bump(); }
+      // If whoever dropped out was the last one still thinking, reveal now.
+      if (S.phase === "question" && allAnswered()) revealQuestion();
     }
     elect();
     render();
   }
 
   // The device that's been in the room longest runs the game. A device
-  // that has never heard from a host only starts a fresh room if it made
-  // the room, or once it's sure nobody else is there.
+  // that just arrived only takes over if it made the room, or once it's
+  // had time to hear from everyone else (they all check in every BEAT).
   function elect() {
     if (!me || !connected) return;
     const pool = members.some((m) => m.id === me.id) ? members : [...members, me];
     const host = pool.slice().sort((a, b) => (a.at || 0) - (b.at || 0) || String(a.id).localeCompare(String(b.id)))[0];
     const was = amHost;
     let mine = !!host && host.id === me.id;
-    if (mine && !was && !gotState && !createdRoom && Date.now() - joinedAt < 4000) {
-      setTimeout(() => { elect(); render(); }, 4200 - (Date.now() - joinedAt));
+    const settle = BEAT + 2000;
+    if (mine && !was && !createdRoom && Date.now() - joinedAt < settle) {
+      setTimeout(() => { elect(); render(); }, settle + 200 - (Date.now() - joinedAt));
       mine = false;
     }
     amHost = mine;
     if (amHost && !was) takeOver();
-    if (!amHost && was) stopHostLoop();
+    if (!amHost && was) {
+      stopHostLoop();
+      // One last update, so the new host can catch up if it's behind.
+      if (net && S) net.send("state", S);
+    }
   }
 
   function takeOver() {
@@ -356,7 +399,6 @@
       at: sameRoom && prev.at ? prev.at : (opts.host ? Date.now() - 3600000 : Date.now()),
     };
     createdRoom = !!opts.host || !!(sameRoom && prev.state);
-    gotState = false;
     joinedAt = Date.now();
     lastPhase = null;
     room = code;
@@ -653,9 +695,14 @@
     if (!Q.scores[id]) Q.scores[id] = blankScore();
     if (Q.scores[id].hidden && Q.scores[id].hidden.includes(choice)) return;
     Q.answers[id] = { c: choice, ms: Math.max(0, S.settings.qseconds * 1000 - Math.max(0, Q.endsAt - Date.now())) };
-    const active = S.players.filter((p) => isOnline(p.id));
-    if (active.length && active.every((p) => Q.answers[p.id])) revealQuestion();
+    if (allAnswered()) revealQuestion();
     else bump();
+  }
+
+  // Everyone still in the room has locked in an answer.
+  function allAnswered() {
+    const active = S.players.filter((p) => isOnline(p.id));
+    return active.length > 0 && active.every((p) => S.quiz.answers[p.id]);
   }
 
   function useFifty(id, n) {

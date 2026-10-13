@@ -94,10 +94,11 @@ The layout widens on a PC, and the big screen fills a full-screen browser window
 ### If someone drops out
 
 - Refreshing the page puts you straight back in the room.
-- If the host drops out, the device that's been in the room longest takes over and the game carries on from where it was.
+- Someone who loses signal or locks their phone greys out after about 16 seconds, and the quiz stops waiting for their answer. They're back in as soon as they reconnect.
+- If the host drops out, the device that's been in the room longest takes over (straight away if they closed the page) and the game carries on from where it was. When the host comes back, they pick up from wherever the room has got to.
 - Before a turn starts, the host can skip the describer and hand the turn to the next person on that team. A one-person team's turn passes to the next team instead. If the describer drops out mid-turn, the host can end the turn for them.
 
-Rooms run over Supabase Realtime in the same project as the deck. Nothing about a room is saved in the database; it only exists while people are in it.
+Rooms run over Supabase Realtime broadcast in the same project as the deck. Every device checks in every few seconds, which is how the room knows who's there; it doesn't use Supabase's Presence feature, whose timeouts used to throw people out of rooms. Nothing about a room is saved in the database; it only exists while people are in it.
 
 ### Playing inside Discord (Activity)
 
