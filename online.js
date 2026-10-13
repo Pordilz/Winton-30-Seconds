@@ -772,6 +772,34 @@
       el("p", { class: "small center", text: connected ? "Waiting for the host…" : "Connecting to the room…" }));
   }
 
+  // The room link as a QR code, drawn once the QR library has loaded. It's
+  // always dark on light so any phone camera can read it off a stream.
+  function qrNode(text, label) {
+    const box = el("div", { class: "net-qr", role: "img", "aria-label": label });
+    const draw = () => {
+      const qr = window.qrcode(0, "M");
+      qr.addData(text);
+      qr.make();
+      const n = qr.getModuleCount();
+      const quiet = 4;
+      let d = "";
+      for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+          if (!qr.isDark(r, c)) continue;
+          let run = 1;
+          while (c + run < n && qr.isDark(r, c + run)) run++;
+          d += `M${c + quiet} ${r + quiet}h${run}v1h-${run}z`;
+          c += run - 1;
+        }
+      }
+      const size = n + quiet * 2;
+      box.replaceChildren(W.svg(`<svg viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" aria-hidden="true"><rect class="bg" width="${size}" height="${size}"/><path class="on" d="${d}"/></svg>`));
+    };
+    if (window.qrcode) draw();
+    else loadScript("vendor/qrcode.js").then(draw).catch(() => { box.hidden = true; });
+    return box;
+  }
+
   function teamChip(i) {
     const ink = TEAM_INKS[(S.teams[i] && S.teams[i].ink) ?? i];
     return el("span", { class: "chip", "aria-hidden": "true", style: { background: ink.bg, color: ink.fg }, text: LETTERS[i] });
@@ -858,8 +886,13 @@
     const join = el("section", { class: "net-join" + (big ? " big" : "") },
       el("span", { class: "mini", text: "Room code" }),
       el("span", { class: "net-code plates", text: room, "data-text": room }),
-      el("span", { class: "small", text: window.WINTON_DISCORD ? "Everyone in this Activity is already in." : "Open the game, tap Play online, and type the code. Or open:" }),
-      window.WINTON_DISCORD ? null : el("span", { class: "net-link", text: link.replace(/^https?:\/\//, "") }));
+      window.WINTON_DISCORD
+        ? el("span", { class: "small", text: "Everyone in this Activity is already in." })
+        : el("div", { class: "net-join-row" },
+          qrNode(link, `QR code to join room ${room}`),
+          el("div", { class: "net-join-text" },
+            el("span", { class: "small", text: "Scan to join with your phone camera. Or open the game, tap Play online and type the code, or go to:" }),
+            el("span", { class: "net-link", text: link.replace(/^https?:\/\//, "") }))));
 
     const left = [join, el("div", { class: "chips net-games", role: "group", "aria-label": "Game" },
       ...[["30s", "30 Seconds"], ["quiz", "The quiz"]].map(([g, label]) => {

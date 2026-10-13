@@ -68,7 +68,7 @@ For game nights on a call: everyone joins one room from their own phone or PC, a
 2. Choose how to host:
    - **Big screen to stream:** this device shows the shared screen (the clock, the scores, the questions) but doesn't play. Open it on a PC and share that window on the call with Discord's screen share or Go Live, so everyone sees it.
    - **Host from my phone:** you host and play on the same device. Use this when nobody's streaming.
-3. The room shows a four-letter code and a link. Everyone else opens the game, taps **Play online**, types their name and the code, and taps **Join the room** (or just opens the link).
+3. The room shows a four-letter code, a QR code and a link. Everyone else scans the QR code with their phone camera (or opens the link, or opens the game and taps **Play online** and types the code), adds their name and taps **Join the room**.
 4. In 30 Seconds, everyone picks a team on their own device. The host sets the house rules (or taps **Shuffle the teams**) and starts the game.
 
 ### 30 Seconds online

@@ -723,6 +723,14 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus
 /* the code never breaks across lines, and grows with its card */
 .net-code { font-size: clamp(64px, 22vw, 96px); font-size: clamp(56px, 24cqi, 96px); line-height: 0.9; letter-spacing: 0.08em; white-space: nowrap; }
 .net-link { font-size: 12px; font-weight: 700; overflow-wrap: anywhere; }
+.net-join-row { display: flex; align-items: center; gap: 12px; margin-top: 8px; text-align: left; }
+.net-join-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+/* the QR code stays dark on white whatever the theme, so cameras can read it */
+.net-qr { flex: none; width: 104px; aspect-ratio: 1; border: 2px solid var(--ink); background: #fff; }
+.net-qr[hidden] { display: none; }
+.net-qr svg { display: block; width: 100%; height: 100%; }
+.net-qr .bg { fill: #fff; }
+.net-qr .on { fill: var(--ink); }
 .net-games { justify-content: center; }
 .net-games button:disabled { opacity: 0.35; }
 
@@ -802,6 +810,8 @@ body.net-big[data-screen="net"] #app { max-width: min(1440px, 100%); padding-lef
 .net-view.big .winner-name { margin-top: 12px; }
 .net-view.big .net-code { font-size: clamp(96px, 16vw, 220px); font-size: clamp(72px, 24cqi, 220px); }
 .net-view.big .net-link { font-size: 18px; }
+.net-view.big .net-qr { width: clamp(150px, 15vw, 240px); }
+.net-view.big .net-join-row { gap: 20px; }
 .net-view.big .net-asked { font-family: var(--display); font-weight: 800; font-stretch: 85%; font-size: clamp(22px, 2.2vw, 34px); line-height: 1.15; text-align: left; }
 .net-view.big .team-name { font-size: 28px; }
 .net-view.big .team-score { font-size: 40px; }
