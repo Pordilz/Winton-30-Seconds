@@ -16,8 +16,9 @@
 //    team to guess.
 //  - Keep the comma at the end of each line.
 //  - Duplicate terms are ignored, so don't worry about repeats.
-//  - Optional: a list called AFTER_DARK adds cruder terms that only
-//    play when "After dark" is switched on.
+//
+//  QUIZ (at the bottom) is the same idea for the quiz: made-up sample
+//  questions that play until the phone has loaded the group's quiz.
 // =====================================================================
 
 const WORDS = {
@@ -87,3 +88,17 @@ const WORDS = {
     "The mystery punch",
   ],
 };
+
+// Sample quiz questions. Each has a kind (who_said, reference, poll,
+// numbers, nickname, when, meta), a prompt, an optional quote, four
+// options, the answer (one of the options), and a receipt explaining it.
+const QUIZ = [
+  { kind: "who_said", prompt: "Who said it?", quote: "I'm five minutes away", options: ["Uncle Steve", "Gran", "Coach", "The barber"], answer: "Uncle Steve", receipt: "He was not five minutes away.", difficulty: 1 },
+  { kind: "reference", prompt: "\"The flat tyre\" was on which trip?", options: ["The 2019 road trip", "The karaoke night", "New Year's on the roof", "The quiz night"], answer: "The 2019 road trip", receipt: "In the rain, with no jack.", difficulty: 1 },
+  { kind: "poll", prompt: "The group voted on the best Sunday food. What won?", options: ["Sunday roast", "Mom's lasagne", "Midnight toasties", "Burnt sausages"], answer: "Sunday roast", receipt: "It wasn't close.", difficulty: 2 },
+  { kind: "numbers", prompt: "How many people turned up to the karaoke night?", options: ["4", "7", "11", "15"], answer: "7", receipt: "Seven, and one microphone.", difficulty: 2 },
+  { kind: "nickname", prompt: "Who goes by \"Coach\"?", options: ["The PE teacher", "Uncle Steve", "The barber", "Gran"], answer: "The PE teacher", receipt: "Still blows the whistle at braais.", difficulty: 1 },
+  { kind: "when", prompt: "When was the burnt Christmas dinner?", options: ["2018", "2020", "2021", "2023"], answer: "2021", receipt: "The smoke alarm was the guest of honour.", difficulty: 3 },
+  { kind: "meta", prompt: "What did the group chat bot get asked first?", options: ["To settle an argument", "For a recipe", "To write a poem", "The weather"], answer: "To settle an argument", receipt: "It refused to pick a side.", difficulty: 2 },
+  { kind: "who_said", prompt: "Who said it?", quote: "Trust me, I know a shortcut", options: ["Gran", "Coach", "Uncle Steve", "The cousin from overseas"], answer: "The cousin from overseas", receipt: "We did not get there faster.", difficulty: 2 },
+];
