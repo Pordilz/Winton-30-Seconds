@@ -22,7 +22,7 @@
   if (!W) return;
   const {
     $, el, show, toast, setPlates, beep, haptic, unlockAudio, keepScreenOn, store, shuffle, rand, clampInt,
-    dealCard, receiptFor, attachSwipe, burst, computeAwards, termKey, pickKind,
+    dealCard, receiptFor, attachSwipe, burst, computeAwards, termKey, pickKind, spinTicks,
     CARD_SIZE, TEAM_INKS, AWARD_INKS, LETTERS, TWISTS, PIPS, CLASSIC_DIE, CHAOS_DIE, QUIZ_KINDS, TILES, SCORE, TAB,
   } = W;
 
@@ -62,18 +62,45 @@
   }
 
   const cleanCode = (v) => String(v || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 5);
+
+  // The address that joins a room. The code rides in the query string, not
+  // after a #, which some QR scanner apps drop or mangle. It points at the
+  // live site (SITE comes from build.js), so a QR shown on a preview
+  // deployment still opens somewhere everyone can reach.
+  function roomLink(code) {
+    const base = typeof SITE === "object" && SITE && SITE.url ? SITE.url : `${location.origin}${location.pathname}`;
+    const url = new URL(base);
+    if (useLocalNet) url.searchParams.set("net", "local");
+    url.searchParams.set("room", code);
+    return url.toString();
+  }
+
+  // A room code in the address: ?room=ABCD from a link or QR code, or
+  // #room=ABCD from the address bar of someone already in the room.
+  function roomFromUrl() {
+    const hash = location.hash.match(/^#room=([A-Za-z]{4,5})$/);
+    const code = cleanCode(new URLSearchParams(location.search).get("room") || (hash && hash[1]) || "");
+    return code.length >= 4 ? code : null;
+  }
   const cleanName = (v) => String(v || "").replace(/\s+/g, " ").trim().slice(0, 24);
 
+  // Every caller waits for the same download, so a view redrawn while a
+  // script is still loading doesn't race ahead of it.
+  const scripts = new Map();
   function loadScript(src) {
-    return new Promise((resolve, reject) => {
-      if (document.querySelector(`script[data-src="${src}"]`)) return resolve();
-      const s = document.createElement("script");
-      s.src = src;
-      s.dataset.src = src;
-      s.onload = () => resolve();
-      s.onerror = () => reject(new Error(`Couldn't load ${src}`));
-      document.head.append(s);
-    });
+    if (!scripts.has(src)) {
+      scripts.set(src, new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = src;
+        s.onload = () => resolve();
+        s.onerror = () => {
+          scripts.delete(src); // let a later call try again
+          reject(new Error(`Couldn't load ${src}`));
+        };
+        document.head.append(s);
+      }));
+    }
+    return scripts.get(src);
   }
 
   // ------------------------------------------------------------------ transport
@@ -339,6 +366,7 @@
     amHost = false;
     connected = false;
     unlockAudio();
+    if (!window.WINTON_DISCORD) loadScript("vendor/qrcode.js").catch(() => {}); // for the lobby's QR code
     showRoom();
     try {
       const handlers = {
@@ -367,7 +395,11 @@
       return;
     }
     keepScreenOn(true);
-    if (!location.hash.startsWith("#room=")) history.replaceState(null, "", `${location.pathname}${location.search}#room=${code}`);
+    // Keep the room in the address bar, so a refresh lands back in it.
+    const here = new URL(location.href);
+    here.searchParams.delete("room");
+    here.hash = `room=${code}`;
+    history.replaceState(null, "", here.toString());
   }
 
   function leaveRoom(quiet) {
@@ -377,7 +409,12 @@
     document.body.classList.remove("net-big");
     session.clear();
     keepScreenOn(false);
-    if (location.hash.startsWith("#room=")) history.replaceState(null, "", location.pathname + location.search);
+    const here = new URL(location.href);
+    if (here.searchParams.has("room") || here.hash.startsWith("#room=")) {
+      here.searchParams.delete("room");
+      here.hash = "";
+      history.replaceState(null, "", here.toString());
+    }
     if (!quiet) show("setup");
   }
 
@@ -587,7 +624,8 @@
     for (const p of S.players) if (!Q.scores[p.id]) Q.scores[p.id] = blankScore();
     Q.running = false;
     Q.left = S.settings.qseconds * 1000;
-    Q.spinUntil = Date.now() + 2600;
+    // The wheel takes about 1.8s to land; the rest is time to read where it stopped.
+    Q.spinUntil = Date.now() + 2800;
     S.phase = "spin";
     bump();
   }
@@ -796,7 +834,7 @@
       box.replaceChildren(W.svg(`<svg viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" aria-hidden="true"><rect class="bg" width="${size}" height="${size}"/><path class="on" d="${d}"/></svg>`));
     };
     if (window.qrcode) draw();
-    else loadScript("vendor/qrcode.js").then(draw).catch(() => { box.hidden = true; });
+    else loadScript("vendor/qrcode.js").then(() => { if (window.qrcode) draw(); else box.hidden = true; }, () => { box.hidden = true; });
     return box;
   }
 
@@ -882,7 +920,7 @@
 
   function lobbyView(big) {
     const players = S.players;
-    const link = `${location.origin}${location.pathname}#room=${room}`;
+    const link = roomLink(room);
     const join = el("section", { class: "net-join" + (big ? " big" : "") },
       el("span", { class: "mini", text: "Room code" }),
       el("span", { class: "net-code plates", text: room, "data-text": room }),
@@ -894,12 +932,12 @@
             el("span", { class: "small", text: "Scan to join with your phone camera. Or open the game, tap Play online and type the code, or go to:" }),
             el("span", { class: "net-link", text: link.replace(/^https?:\/\//, "") }))));
 
-    const left = [join, el("div", { class: "chips net-games", role: "group", "aria-label": "Game" },
+    const games = el("div", { class: "chips net-games", role: "group", "aria-label": "Game" },
       ...[["30s", "30 Seconds"], ["quiz", "The quiz"]].map(([g, label]) => {
         const chip = el("button", { type: "button", "aria-pressed": String(S.game === g), text: label });
         if (amHost) chip.addEventListener("click", () => setGame(g)); else chip.disabled = S.game !== g;
         return chip;
-      }))];
+      }));
     const right = [];
     const foot = [];
 
@@ -932,7 +970,12 @@
       foot.push(el("p", { class: "mode-note", text: "The host picks the game and starts it." }));
     }
     if (me.role === "player") foot.push(nameEditor());
-    return { node: layout("lobby", big, { left, right, foot }) };
+    // The big screen gives the room card (and its QR code) a column of its
+    // own, so everything else, Start included, stacks up beside it.
+    const parts = big
+      ? { left: [join], right: [games, ...right, ...foot] }
+      : { left: [join, games], right, foot };
+    return { node: layout("lobby", big, parts) };
   }
 
   function stepper(label, key, step) {
@@ -1157,16 +1200,16 @@
     const kinds = Object.keys(QUIZ_KINDS);
     const wheel = el("ul", { class: "wheel" + (big ? " big" : "") });
     const paint = (lit) => wheel.replaceChildren(...kinds.map((k) => el("li", { class: k === lit ? "lit" : "", text: QUIZ_KINDS[k].wheel })));
-    let steps = kinds.length * 2 + kinds.indexOf(Q.kind);
-    let at = 0, delay = 60;
+    // Lands on the question's category in a fixed time, well inside the spin.
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const ticks = reduce ? [] : spinTicks(kinds, Q.kind);
+    let at = 0;
     const step = () => {
       if (!wheel.isConnected) return;
-      if (reduce || steps-- <= 0) { paint(Q.kind); return; }
-      paint(kinds[at++ % kinds.length]);
+      if (at >= ticks.length) { paint(Q.kind); return; }
+      paint(kinds[at % kinds.length]);
       if (big || me.role === "screen") beep(500 + (at % 2) * 120, 0.025, 0.06);
-      delay *= 1.1;
-      setTimeout(step, delay);
+      setTimeout(step, ticks[at++]);
     };
     paint(null);
     setTimeout(step, 50);
@@ -1366,13 +1409,19 @@
     }
   });
 
+  // With a room code (from a link or a QR code), everything's filled in:
+  // someone who's played before is one tap from the room.
+  const joinButton = $("#net-join-form [type=submit]");
+  const joinLabel = joinButton.textContent;
   function openMenu(prefill) {
     const name = store.get(NAME_KEY, "");
+    const code = prefill ? cleanCode(prefill) : "";
     $("#net-name").value = name;
-    $("#net-code").value = prefill ? cleanCode(prefill) : "";
+    $("#net-code").value = code;
+    joinButton.textContent = code ? `Join room ${code}` : joinLabel;
     $("#net-menu-note").textContent = W.remote() || useLocalNet ? "" : "Online play needs the group database, which this copy of the game isn't connected to.";
-    show("net-menu", "Play online · Winton");
-    (prefill ? $("#net-name") : $("#net-code")).focus();
+    show("net-menu", code ? `Join room ${code} · Winton` : "Play online · Winton");
+    (code ? (name ? joinButton : $("#net-name")) : $("#net-code")).focus();
   }
 
   function pickedHostGame() {
@@ -1401,7 +1450,10 @@
     if (code.length < 4) { toast("Type the room code first."); return $("#net-code").focus(); }
     joinRoom(code, "screen");
   });
-  $("#net-code").addEventListener("input", (e) => { e.target.value = cleanCode(e.target.value); });
+  $("#net-code").addEventListener("input", (e) => {
+    e.target.value = cleanCode(e.target.value);
+    joinButton.textContent = joinLabel;
+  });
 
   $("#net-leave").addEventListener("click", () => {
     if (S && S.phase !== "lobby" && !window.confirm("Leave the room? The game carries on without you.")) return;
@@ -1410,13 +1462,8 @@
 
   // ------------------------------------------------------------------ start-up
 
-  function fromHash() {
-    const m = location.hash.match(/^#room=([A-Za-z]{4,5})$/);
-    return m ? cleanCode(m[1]) : null;
-  }
-
   window.addEventListener("hashchange", () => {
-    const code = fromHash();
+    const code = roomFromUrl();
     if (code && !me) openMenu(code);
   });
 
@@ -1432,11 +1479,13 @@
       else { openMenu(code); $("#net-join-form [type=submit]").textContent = "Join the call's game"; }
       return;
     }
-    if (saved && saved.room && (saved.role === "screen" || store.get(NAME_KEY, ""))) {
+    // A refresh drops you back into your room. A link or QR code for a
+    // different room wins over the one this tab was in before.
+    const linked = roomFromUrl();
+    if (saved && saved.room && (!linked || linked === saved.room) && (saved.role === "screen" || store.get(NAME_KEY, ""))) {
       joinRoom(saved.room, saved.role, { name: store.get(NAME_KEY, ""), game: saved.game });
       return;
     }
-    const code = fromHash();
-    if (code) openMenu(code);
+    if (linked) openMenu(linked);
   });
 })();

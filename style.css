@@ -719,6 +719,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus
   padding: 12px 10px 14px; border: 2.5px solid var(--ink); background: var(--paper-hi);
   box-shadow: 6px 6px 0 var(--purple); transform: rotate(-0.6deg);
   container-type: inline-size;
+  /* above the paper grain, so the code and the QR print clean for cameras */
+  position: relative; z-index: 51;
 }
 /* the code never breaks across lines, and grows with its card */
 .net-code { font-size: clamp(64px, 22vw, 96px); font-size: clamp(56px, 24cqi, 96px); line-height: 0.9; letter-spacing: 0.08em; white-space: nowrap; }
@@ -726,9 +728,10 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus
 .net-join-row { display: flex; align-items: center; gap: 12px; margin-top: 8px; text-align: left; }
 .net-join-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 /* the QR code stays dark on white whatever the theme, so cameras can read it */
-.net-qr { flex: none; width: 104px; aspect-ratio: 1; border: 2px solid var(--ink); background: #fff; }
+/* turned back square against the card's tilt: sharp module edges scan better */
+.net-qr { flex: none; width: 128px; border: 2px solid var(--ink); background: #fff; transform: rotate(0.6deg); }
 .net-qr[hidden] { display: none; }
-.net-qr svg { display: block; width: 100%; height: 100%; }
+.net-qr svg { display: block; width: 100%; height: auto; }
 .net-qr .bg { fill: #fff; }
 .net-qr .on { fill: var(--ink); }
 .net-games { justify-content: center; }
@@ -810,8 +813,11 @@ body.net-big[data-screen="net"] #app { max-width: min(1440px, 100%); padding-lef
 .net-view.big .winner-name { margin-top: 12px; }
 .net-view.big .net-code { font-size: clamp(96px, 16vw, 220px); font-size: clamp(72px, 24cqi, 220px); }
 .net-view.big .net-link { font-size: 18px; }
-.net-view.big .net-qr { width: clamp(150px, 15vw, 240px); }
-.net-view.big .net-join-row { gap: 20px; }
+/* On a stream the QR is the main event. Phones filming a compressed stream
+   need it about 40% of the screen's height to read it. */
+.net-view.big { --qr: min(42vh, 30vw); }
+.net-view.big .net-qr { width: var(--qr); }
+.net-view.big .net-join-row { gap: 14px; flex-direction: column; text-align: center; }
 .net-view.big .net-asked { font-family: var(--display); font-weight: 800; font-stretch: 85%; font-size: clamp(22px, 2.2vw, 34px); line-height: 1.15; text-align: left; }
 .net-view.big .team-name { font-size: 28px; }
 .net-view.big .team-score { font-size: 40px; }
@@ -832,7 +838,9 @@ body.net-big[data-screen="net"] #app { max-width: min(1440px, 100%); padding-lef
 @media (min-width: 900px) {
   .net-view.big .net-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 20px 56px; }
   .net-view.big .net-col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
-  .net-view.big.lobby .net-cols { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  /* the room card is as wide as its QR code; everything else gets the rest */
+  .net-view.big.lobby .net-cols { grid-template-columns: calc(var(--qr) + 56px) minmax(0, 1fr); }
+  .net-view.big.lobby .net-games { justify-content: flex-start; }
   .net-view.big.question .net-cols { grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr); align-items: center; }
   .net-view.big.question .clock-num.huge { font-size: clamp(120px, 15vw, 240px); }
   .net-view.big .tiles { gap: 16px; }

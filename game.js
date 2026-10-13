@@ -1443,6 +1443,17 @@
     meta: { wheel: "Meta AI", title: "Meta AI", weight: 0.35 },
   };
 
+  // How long the wheel ticks between each highlight: twice round, slowing
+  // down, then the landing. It always adds up to SPIN_MS, so an online spin
+  // has landed well before the question appears.
+  const SPIN_MS = 1800;
+  function spinTicks(kinds, landed) {
+    const steps = kinds.length * 2 + Math.max(0, kinds.indexOf(landed));
+    const weights = Array.from({ length: steps }, (_, i) => 1.12 ** i);
+    const total = weights.reduce((sum, w) => sum + w, 0) || 1;
+    return weights.map((w) => (w / total) * SPIN_MS);
+  }
+
   // Picks the category a spin lands on, from those with questions left.
   function pickKind(kinds) {
     const weight = (k) => QUIZ_KINDS[k].weight ?? 1;
@@ -1714,16 +1725,14 @@
     const landed = pickKind(kinds);
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     // Tick round the wheel, slowing down, and stop on the chosen category.
-    let steps = reduceMotion ? 0 : kinds.length * 2 + kinds.indexOf(landed);
+    const ticks = reduceMotion ? [] : spinTicks(kinds, landed);
     let at = 0;
-    let delay = 50;
     $("#spin").disabled = true;
     const step = () => {
-      if (steps-- > 0) {
-        renderWheel(kinds, kinds[at++ % kinds.length]);
+      if (at < ticks.length) {
+        renderWheel(kinds, kinds[at % kinds.length]);
         beep(500 + (at % 2) * 120, 0.025, 0.07);
-        delay *= 1.12;
-        return setTimeout(step, delay);
+        return setTimeout(step, ticks[at++]);
       }
       renderWheel(kinds, landed);
       haptic(30);
@@ -2033,7 +2042,7 @@
   // What online.js needs from the game.
   window.W30 = {
     $, el, svg, show, toast, setPlates, beep, haptic, unlockAudio, keepScreenOn, store, shuffle, rand, pad,
-    clampInt, termKey, dupKey, allTerms, dealCard, receiptFor, categoryLabel, attachSwipe, burst, computeAwards, pickKind,
+    clampInt, termKey, dupKey, allTerms, dealCard, receiptFor, categoryLabel, attachSwipe, burst, computeAwards, pickKind, spinTicks,
     tabClock, syncDeck, syncQuiz, quizBank: () => QUIZ_BANK, remote: () => REMOTE,
     CARD_SIZE, TEAM_INKS, AWARD_INKS, LETTERS, TWISTS, PIPS, CLASSIC_DIE, CHAOS_DIE, QUIZ_KINDS, TILES, SCORE,
     ARROW, TICK, TAB, MIN_TEAMS, MAX_TEAMS,

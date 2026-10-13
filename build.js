@@ -29,12 +29,16 @@ const key = (process.env.SUPABASE_PUBLISHABLE_KEY || "").trim();
 // The Discord application ID is public too; it's only needed for the
 // Discord Activity (see "Playing inside Discord" in README.md).
 const discordId = (process.env.DISCORD_CLIENT_ID || "").trim();
+// Vercel sets this to the site's public address, so room links and QR codes
+// point there even when the game is opened from a preview deployment.
+const site = (process.env.VERCEL_PROJECT_PRODUCTION_URL || "").trim();
 let config = url && key
   ? `// Written by build.js. The publishable key is safe to ship to browsers.\nconst SUPABASE = ${JSON.stringify({ url, key })};\n`
   : "// No Supabase settings at build time: the game uses the starter deck in words.js.\n";
 if (discordId) config += `const DISCORD = ${JSON.stringify({ clientId: discordId })};\n`;
+if (site) config += `const SITE = ${JSON.stringify({ url: `https://${site.replace(/^https?:\/\//, "").replace(/\/+$/, "")}/` })};\n`;
 fs.writeFileSync(path.join(out, "config.js"), config);
 
 console.log((url && key
   ? `Built dist/ connected to ${new URL(url).host}`
-  : "Built dist/ with no Supabase settings (starter deck only)") + (discordId ? ", with Discord" : ""));
+  : "Built dist/ with no Supabase settings (starter deck only)") + (discordId ? ", with Discord" : "") + (site ? `, links to ${site}` : ""));

@@ -68,7 +68,7 @@ For game nights on a call: everyone joins one room from their own phone or PC, a
 2. Choose how to host:
    - **Big screen to stream:** this device shows the shared screen (the clock, the scores, the questions) but doesn't play. Open it on a PC and share that window on the call with Discord's screen share or Go Live, so everyone sees it.
    - **Host from my phone:** you host and play on the same device. Use this when nobody's streaming.
-3. The room shows a four-letter code, a QR code and a link. Everyone else scans the QR code with their phone camera (or opens the link, or opens the game and taps **Play online** and types the code), adds their name and taps **Join the room**.
+3. The room shows a four-letter code, a QR code and a link. Everyone else points their phone camera at the QR code (on the stream works), or opens the link, and the game opens with the room filled in. Type your name the first time; after that it's one tap on **Join room ABCD**. Typing the code under **Play online** works too.
 4. In 30 Seconds, everyone picks a team on their own device. The host sets the house rules (or taps **Shuffle the teams**) and starts the game.
 
 ### 30 Seconds online
@@ -176,6 +176,7 @@ The game is hosted on Vercel, connected to this repo, so every push deploys on i
 
 - The Vercel project needs two environment variables: **`SUPABASE_URL`** and **`SUPABASE_PUBLISHABLE_KEY`**. The build (`node build.js`) copies the game into `dist/` and writes them into `config.js`, so they never have to be committed. The publishable key is meant for browsers. The database's row-level security only lets it read the game's three tables and add new terms.
 - **`DISCORD_CLIENT_ID`** is optional: the Discord application's ID, for running the game as a Discord Activity. It's public too.
+- Room links and QR codes point at the site's public address, which Vercel provides to the build as `VERCEL_PROJECT_PRODUCTION_URL`. Without it (running locally, say) they point at whatever address the page was opened on.
 - Anyone with the game's link can read the deck, the lore and the quiz, so share the link with the group rather than posting it publicly.
 
 **Running it locally:** open `index.html` in a browser for the starter deck. For the real deck, run:
