@@ -22,7 +22,7 @@
   if (!W) return;
   const {
     $, el, show, toast, setPlates, beep, haptic, unlockAudio, keepScreenOn, store, shuffle, rand, clampInt,
-    dealCard, receiptFor, attachSwipe, burst, computeAwards, termKey,
+    dealCard, receiptFor, attachSwipe, burst, computeAwards, termKey, pickKind,
     CARD_SIZE, TEAM_INKS, AWARD_INKS, LETTERS, TWISTS, PIPS, CLASSIC_DIE, CHAOS_DIE, QUIZ_KINDS, TILES, SCORE, TAB,
   } = W;
 
@@ -570,8 +570,8 @@
     const used = new Set(Q.used);
     let pool = bank.filter((q) => !used.has(q.key));
     if (!pool.length) { Q.used = []; pool = bank.slice(); }
-    const kinds = [...new Set(pool.map((q) => q.kind))];
-    const kind = kinds[rand(kinds.length)];
+    const open = new Set(pool.map((q) => q.kind));
+    const kind = pickKind(Object.keys(QUIZ_KINDS).filter((k) => open.has(k)));
     // Easy questions early, deep lore late.
     const wanted = Q.total < 2 ? 2 : 1 + Math.round((2 * Q.n) / (Q.total - 1));
     const options = shuffle(pool.filter((q) => q.kind === kind)).sort((a, b) => Math.abs(a.level - wanted) - Math.abs(b.level - wanted));
@@ -1305,7 +1305,7 @@
     if (lost && Q.scores[lost].wrong) awards.push({ label: "Do you even read the chat?", value: `${name(lost)} (${Q.scores[lost].wrong} wrong)`, badge: "?" });
     const byKind = {};
     for (const x of h) { const k = (byKind[x.kind] ||= { right: 0, all: 0 }); k.all++; if (x.correct) k.right++; }
-    const hardest = Object.entries(byKind).filter(([, v]) => v.all > 1).sort((a, b) => a[1].right / a[1].all - b[1].right / b[1].all)[0];
+    const hardest = Object.entries(byKind).filter(([k, v]) => QUIZ_KINDS[k] && v.all > 1).sort((a, b) => a[1].right / a[1].all - b[1].right / b[1].all)[0];
     if (hardest && hardest[1].right < hardest[1].all) awards.push({ label: "The category nobody knows", value: `${QUIZ_KINDS[hardest[0]].wheel} (${hardest[1].right} of ${hardest[1].all})`, badge: "✗" });
     return awards;
   }

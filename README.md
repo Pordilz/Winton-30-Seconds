@@ -37,7 +37,7 @@ On the setup screen you can change:
 Tap **Play the quiz** on the cover for a second game: trivia about the chat, pass-the-phone style. It borrows from Kahoot, Trivia Crack, *Who Wants to Be a Millionaire* and Jackbox.
 
 1. Add teams (or single players) and pick the number of rounds (default 5) and the seconds to answer (default 20). In each round, every team answers one question.
-2. **Spin** for a category: Who said it, What's the reference, Polls, Numbers, Nicknames, When was it, or Meta AI. Questions get harder as the rounds go on.
+2. **Spin** for a category: Who said it, What's the reference, Gamer lore, Polls, Numbers, Nicknames, When was it, or Meta AI (which comes up about a third as often as the others). Questions get harder as the rounds go on.
 3. **Show the question** and tap one of the four coloured answers before the clock runs out.
 4. Scoring:
    - **500** for a right answer, plus up to **500** more the faster you answer.
@@ -143,7 +143,7 @@ Everything lives in three tables in the Supabase project (job-hub). Open it at [
 
   Fix, delete or re-categorise terms here. Terms added from phones arrive without a difficulty or receipt; fill those in whenever you like.
 - **`winton_quiz`** is the quiz, one row per question:
-  - `kind`: `who_said`, `reference`, `poll`, `numbers`, `nickname`, `when` or `meta`. This is the category the spin lands on.
+  - `kind`: `who_said`, `reference`, `games`, `poll`, `numbers`, `nickname`, `when` or `meta`. This is the category the spin lands on. How often each category comes up is set by `weight` in `QUIZ_KINDS` in `game.js`.
   - `prompt`: the question. `quote` (optional) is a line from the chat, shown as a quote card.
   - `options`: exactly four answers. `answer` must be one of them, word for word.
   - `receipt`: the explanation on the reveal screen.

@@ -1430,15 +1430,29 @@
   // round is worth double. The questions live in the winton_quiz table; QUIZ
   // in words.js holds made-up samples for a phone that has never connected.
 
+  // `weight` is how often the spin lands on a category compared with the
+  // rest (1 when it's left out). Meta AI comes up less than the chat itself.
   const QUIZ_KINDS = {
     who_said: { wheel: "Who said it", title: "Who said it?" },
     reference: { wheel: "What's the reference", title: "What were they on about?" },
+    games: { wheel: "Gamer lore", title: "Gamer lore" },
     poll: { wheel: "Polls", title: "The poll" },
     numbers: { wheel: "Numbers", title: "By the numbers" },
     nickname: { wheel: "Nicknames", title: "Nicknames" },
     when: { wheel: "When was it", title: "When was it?" },
-    meta: { wheel: "Meta AI", title: "Meta AI" },
+    meta: { wheel: "Meta AI", title: "Meta AI", weight: 0.35 },
   };
+
+  // Picks the category a spin lands on, from those with questions left.
+  function pickKind(kinds) {
+    const weight = (k) => QUIZ_KINDS[k].weight ?? 1;
+    let roll = Math.random() * kinds.reduce((sum, k) => sum + weight(k), 0);
+    for (const k of kinds) {
+      roll -= weight(k);
+      if (roll < 0) return k;
+    }
+    return kinds[kinds.length - 1];
+  }
   const QUIZ_LIMITS = { rounds: [1, 15], seconds: [10, 60] };
   const SCORE = { right: 500, speed: 500, streakStep: 100, streakMax: 500 };
   // Kahoot's four answer colours and shapes, in riso inks.
@@ -1697,7 +1711,7 @@
   $("#spin").addEventListener("click", () => {
     unlockAudio();
     const kinds = openKinds();
-    const landed = kinds[rand(kinds.length)];
+    const landed = pickKind(kinds);
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     // Tick round the wheel, slowing down, and stop on the chosen category.
     let steps = reduceMotion ? 0 : kinds.length * 2 + kinds.indexOf(landed);
@@ -1952,7 +1966,7 @@
       k.all++;
       if (t.correct) k.right++;
     }
-    const hardest = Object.entries(byKind).filter(([, v]) => v.all > 1).sort((a, b) => a[1].right / a[1].all - b[1].right / b[1].all)[0];
+    const hardest = Object.entries(byKind).filter(([k, v]) => QUIZ_KINDS[k] && v.all > 1).sort((a, b) => a[1].right / a[1].all - b[1].right / b[1].all)[0];
     if (hardest && hardest[1].right < hardest[1].all) {
       awards.push({ label: "The category nobody knows", value: `${QUIZ_KINDS[hardest[0]].wheel} (${hardest[1].right} of ${hardest[1].all})`, badge: "✗" });
     }
@@ -2019,7 +2033,7 @@
   // What online.js needs from the game.
   window.W30 = {
     $, el, svg, show, toast, setPlates, beep, haptic, unlockAudio, keepScreenOn, store, shuffle, rand, pad,
-    clampInt, termKey, dupKey, allTerms, dealCard, receiptFor, categoryLabel, attachSwipe, burst, computeAwards,
+    clampInt, termKey, dupKey, allTerms, dealCard, receiptFor, categoryLabel, attachSwipe, burst, computeAwards, pickKind,
     tabClock, syncDeck, syncQuiz, quizBank: () => QUIZ_BANK, remote: () => REMOTE,
     CARD_SIZE, TEAM_INKS, AWARD_INKS, LETTERS, TWISTS, PIPS, CLASSIC_DIE, CHAOS_DIE, QUIZ_KINDS, TILES, SCORE,
     ARROW, TICK, TAB, MIN_TEAMS, MAX_TEAMS,
