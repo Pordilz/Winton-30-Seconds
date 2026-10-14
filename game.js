@@ -1440,7 +1440,7 @@
     numbers: { wheel: "Numbers", title: "By the numbers" },
     nickname: { wheel: "Nicknames", title: "Nicknames" },
     when: { wheel: "When was it", title: "When was it?" },
-    meta: { wheel: "Meta AI", title: "Meta AI", weight: 0.35 },
+    meta: { wheel: "Meta AI", title: "Meta AI", weight: 0.2 },
   };
 
   // How long the wheel ticks between each highlight: twice round, slowing
@@ -1455,8 +1455,18 @@
   }
 
   // Picks the category a spin lands on, from those with questions left.
-  function pickKind(kinds) {
-    const weight = (k) => QUIZ_KINDS[k].weight ?? 1;
+  // `recent` lists the categories this quiz has already landed on, oldest
+  // first. One that came up lately is far less likely, so the wheel moves
+  // round the categories instead of landing on the same few: a category
+  // lands twice in a row about 1 spin in 250.
+  function pickKind(kinds, recent = []) {
+    const weight = (k) => {
+      const base = QUIZ_KINDS[k].weight ?? 1;
+      const last = recent.lastIndexOf(k);
+      if (last < 0) return base;
+      const ago = recent.length - last; // 1 for the spin before this one
+      return base * Math.min(1, ago / kinds.length) ** 2;
+    };
     let roll = Math.random() * kinds.reduce((sum, k) => sum + weight(k), 0);
     for (const k of kinds) {
       roll -= weight(k);
@@ -1686,15 +1696,25 @@
     return Object.keys(QUIZ_KINDS).filter((k) => kinds.has(k));
   }
 
-  // Questions get harder as the quiz goes on: easy ones early, deep lore late.
-  function pickQuestion(kind) {
-    const used = new Set(quiz.used);
+  // The difficulty to aim for: easy questions early, deep lore late.
+  const wantedLevel = (round, rounds) => (rounds < 2 ? 2 : 1 + Math.round((2 * (round - 1)) / (rounds - 1)));
+
+  // A question of this kind that this quiz hasn't used yet. Ones this
+  // device has never asked come first, then the ones it asked longest ago,
+  // and among those the closest to the wanted difficulty. The online quiz
+  // uses this too, so the device running a room doesn't repeat a question
+  // until it has asked every other one in that category.
+  function freshQuestion(kind, used, wanted) {
+    const skip = new Set(used);
     const seen = new Map(seenKeys().map((k, i) => [k, i + 1]));
-    const wanted = quiz.rounds < 2 ? 2 : 1 + Math.round((2 * (quiz.round - 1)) / (quiz.rounds - 1));
-    const pool = shuffle(QUIZ_BANK.filter((q) => q.kind === kind && !used.has(q.key)));
+    const pool = shuffle(QUIZ_BANK.filter((q) => q.kind === kind && !skip.has(q.key)));
     pool.sort((a, b) => (seen.get(a.key) || 0) - (seen.get(b.key) || 0)
       || Math.abs(a.level - wanted) - Math.abs(b.level - wanted));
     return pool[0] || null;
+  }
+
+  function pickQuestion(kind) {
+    return freshQuestion(kind, quiz.used, wantedLevel(quiz.round, quiz.rounds));
   }
 
   function showQuizTurn() {
@@ -1722,7 +1742,7 @@
   $("#spin").addEventListener("click", () => {
     unlockAudio();
     const kinds = openKinds();
-    const landed = pickKind(kinds);
+    const landed = pickKind(kinds, quiz.history.map((h) => h.kind));
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     // Tick round the wheel, slowing down, and stop on the chosen category.
     const ticks = reduceMotion ? [] : spinTicks(kinds, landed);
@@ -2043,6 +2063,7 @@
   window.W30 = {
     $, el, svg, show, toast, setPlates, beep, haptic, unlockAudio, keepScreenOn, store, shuffle, rand, pad,
     clampInt, termKey, dupKey, allTerms, dealCard, receiptFor, categoryLabel, attachSwipe, burst, computeAwards, pickKind, spinTicks,
+    freshQuestion, wantedLevel, markSeen,
     tabClock, syncDeck, syncQuiz, quizBank: () => QUIZ_BANK, remote: () => REMOTE,
     CARD_SIZE, TEAM_INKS, AWARD_INKS, LETTERS, TWISTS, PIPS, CLASSIC_DIE, CHAOS_DIE, QUIZ_KINDS, TILES, SCORE,
     ARROW, TICK, TAB, MIN_TEAMS, MAX_TEAMS,

@@ -37,7 +37,7 @@ On the setup screen you can change:
 Tap **Play the quiz** on the cover for a second game: trivia about the chat, pass-the-phone style. It borrows from Kahoot, Trivia Crack, *Who Wants to Be a Millionaire* and Jackbox.
 
 1. Add teams (or single players) and pick the number of rounds (default 5) and the seconds to answer (default 20). In each round, every team answers one question.
-2. **Spin** for a category: Who said it, What's the reference, Gamer lore, Polls, Numbers, Nicknames, When was it, or Meta AI (which comes up about a third as often as the others). Questions get harder as the rounds go on.
+2. **Spin** for a category: Who said it, What's the reference, Gamer lore, Polls, Numbers, Nicknames, When was it, or Meta AI (which comes up about a third as often as the others). The wheel moves round the categories: one that has just come up is unlikely to land again for a few spins, so it almost never lands on the same one twice in a row. Questions get harder as the rounds go on.
 3. **Show the question** and tap one of the four coloured answers before the clock runs out.
 4. Scoring:
    - **500** for a right answer, plus up to **500** more the faster you answer.
@@ -48,7 +48,7 @@ Tap **Play the quiz** on the cover for a second game: trivia about the chat, pas
 6. After every answer, the reveal shows the right answer, the receipt explaining it, the points breakdown and the scoreboard.
 7. The quiz ends on a podium with awards: fastest finger, hot streak, biggest answer, "do you even read the chat?", the category nobody knows, and the teams that never needed their 50:50.
 
-Each phone remembers which questions it has asked recently and serves fresh ones first. The quiz saves after every answer, so **Resume last quiz** brings it back after a refresh.
+Each device remembers the questions it has asked, in this quiz and in online rooms it runs, and doesn't repeat one until it has been through the rest of that category. The quiz saves after every answer, so **Resume last quiz** brings it back after a refresh.
 
 ### Extras
 
@@ -82,6 +82,7 @@ For game nights on a call: everyone joins one room from their own phone or PC, a
 - Every player answers on their own device, Kahoot-style: the spin and the question show on every screen, and each player taps one of the four colours.
 - Scoring is the same as the pass-the-phone quiz (speed, streaks, the final question counts double), and **every player has their own 50:50**.
 - The answer is revealed as soon as everyone has answered, or when the clock runs out. The reveal shows how many people picked each answer and the leaderboard. The host moves on with **Next question** (or **Reveal now** to skip the wait).
+- The device running the room picks the questions the same way as the pass-the-phone quiz, so the next quiz in the room starts with ones it hasn't asked before.
 
 ### On a PC
 

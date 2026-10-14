@@ -657,13 +657,15 @@
     let pool = bank.filter((q) => !used.has(q.key));
     if (!pool.length) { Q.used = []; pool = bank.slice(); }
     const open = new Set(pool.map((q) => q.kind));
-    const kind = pickKind(Object.keys(QUIZ_KINDS).filter((k) => open.has(k)));
-    // Easy questions early, deep lore late.
-    const wanted = Q.total < 2 ? 2 : 1 + Math.round((2 * Q.n) / (Q.total - 1));
-    const options = shuffle(pool.filter((q) => q.kind === kind)).sort((a, b) => Math.abs(a.level - wanted) - Math.abs(b.level - wanted));
-    const q = options[0];
+    Q.kinds = Q.kinds || [];
+    const kind = pickKind(Object.keys(QUIZ_KINDS).filter((k) => open.has(k)), Q.kinds);
+    // Questions this device hasn't asked before come first, so the next
+    // quiz in the room doesn't open with the same ones as the last.
+    const q = W.freshQuestion(kind, Q.used, W.wantedLevel(Q.n + 1, Q.total));
+    W.markSeen(q.key);
     Q.n++;
     Q.used.push(q.key);
+    Q.kinds.push(kind);
     Q.kind = kind;
     Q.q = { key: q.key, kind: q.kind, prompt: q.prompt, quote: q.quote, options: q.options, level: q.level };
     Q.answers = {};
